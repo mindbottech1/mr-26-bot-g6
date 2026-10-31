@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b7f85">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Medical Record">
+<title>Medical Record</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg1:#0f2027; --bg2:#203a43; --bg3:#2c5364;
+    --card:rgba(255,255,255,.96); --ink:#1b2a35; --muted:#6b7c88;
+    --accent:#0ea5a4; --accent2:#0b7f85; --line:#dbe5ea; --danger:#d32f2f; --ok:#1f9d63;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; padding:28px 16px;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; color:var(--ink);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+    display:flex; justify-content:center; align-items:flex-start;
+  }
+  .hide{display:none!important}
+  .card{width:100%; max-width:620px; background:var(--card); border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,.35); overflow:hidden}
+
+  /* header + menu */
+  header{padding:18px 20px; color:#fff; background:linear-gradient(120deg,var(--accent2),var(--accent)); display:flex; gap:12px; align-items:center}
+  header .ico{flex:none;width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:24px}
+  .ttl{flex:1;min-width:0}
+  header h1{margin:0;font-size:21px;letter-spacing:.3px;line-height:1.2}
+  .pn{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:13px;min-height:24px}
+  .pn #pnText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pn input{width:170px;max-width:100%;padding:4px 8px;font-size:13px;border-radius:8px;border:0;background:#fff;color:var(--ink)}
+  .pn button{border:0;background:rgba(255,255,255,.2);border-radius:8px;padding:2px 6px;font-size:13px;cursor:pointer;color:#fff}
+  .who{flex:none;font-size:13px;background:rgba(255,255,255,.2);padding:6px 12px;border-radius:999px;max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .menu-btn{flex:none;width:44px;height:44px;border-radius:13px;border:0;background:rgba(255,255,255,.2);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;visibility:hidden}
+  .menu-btn span{display:block;width:20px;height:2.5px;background:#fff;border-radius:2px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+  .overlay.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;left:0;bottom:0;width:260px;max-width:80vw;background:#fff;z-index:21;transform:translateX(-105%);transition:.25s;box-shadow:6px 0 30px rgba(0,0,0,.3);padding:22px 14px;display:flex;flex-direction:column;gap:6px}
+  .drawer.on{transform:none}
+  .drawer .dt{font-weight:800;font-size:13px;letter-spacing:1.2px;color:var(--accent2);padding:0 10px 10px;text-transform:uppercase}
+  .drawer button{text-align:left;font:inherit;font-size:16px;font-weight:600;padding:13px 14px;border:0;border-radius:12px;background:transparent;color:var(--ink);cursor:pointer}
+  .drawer button:hover{background:#eef6f7}
+  .drawer button.active{background:#e0f4f4;color:var(--accent2)}
+  .drawer .out{margin-top:auto;color:var(--danger)}
+
+  /* form fields */
+  form{padding:26px 30px 30px; display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  label small{text-transform:none;font-weight:500;letter-spacing:0}
+  .row{display:flex;gap:8px;align-items:center}
+  input,textarea,select{
+    width:100%; padding:12px 14px; font-size:15px; font-family:inherit; color:var(--ink);
+    background:#f7fafb; border:1.5px solid var(--line); border-radius:12px; outline:none; transition:.15s;
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px rgba(14,165,164,.15)}
+  input.bad,textarea.bad,select.bad{border-color:var(--danger); box-shadow:0 0 0 4px rgba(211,47,47,.12)}
+  .radios{display:flex;gap:22px;align-items:center;height:46px}
+  .radios .opt{display:flex;align-items:center;gap:9px;margin:0;cursor:pointer;font-size:15px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink)}
+  .radios input{position:absolute;opacity:0;width:0;height:0}
+  .radios .dot{width:20px;height:20px;border-radius:50%;border:2px solid #b7c6cf;background:#fff;display:grid;place-items:center;transition:.15s}
+  .radios .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent);transform:scale(0);transition:.15s}
+  .radios input:checked + .dot{border-color:var(--accent)}
+  .radios input:checked + .dot::after{transform:scale(1)}
+  .radios input:focus-visible + .dot{box-shadow:0 0 0 4px rgba(14,165,164,.2)}
+  .section{grid-column:1/-1;display:flex;align-items:center;gap:12px;margin-top:4px;color:var(--accent2);font-weight:800;font-size:14px;letter-spacing:1.2px}
+  .section::before,.section::after{content:"";flex:1;height:1.5px;background:var(--line)}
+  #v-login h2,#v-login .sub{text-align:center}
+  textarea{resize:vertical;min-height:90px}
+  .unit{position:relative}
+  .unit span{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+  .unit input{padding-right:52px}
+  .bp{display:flex;align-items:center;gap:8px}
+  .bp b{font-size:22px;color:var(--muted)}
+  .bp2{display:flex;flex-direction:column;gap:8px}
+  /* Gujarati caption shown below the English field name */
+  .gu{display:block;margin-top:2px;font-family:"Noto Sans Gujarati","Nirmala UI","Shruti","Gujarati Sangam MN",system-ui,sans-serif;font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;line-height:1.35;color:var(--muted)}
+  .radios .opt .gu{display:inline;margin:0;font-size:14px}
+  /* two fields in one row (same idea as the BP Sys./Dia. row) */
+  .pair{display:flex;gap:10px;align-items:flex-start}
+  .pcol{flex:1;min-width:0}
+  .lrow{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}
+  .lrow label{margin-bottom:0}
+  .qrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .lnks{display:flex;gap:10px;margin-top:16px}
+  .lnkbtn{flex:1;text-align:center;text-decoration:none;padding:13px 8px;border-radius:12px;font-size:15px;font-weight:700;border:1.5px solid var(--line);background:#fff;color:var(--accent2)}
+  .lnkbtn.pri{border-color:transparent;color:#fff;background:linear-gradient(120deg,var(--accent2),var(--accent))}
+  .pair .dash{width:34px;height:26px;padding:0;font-size:15px;line-height:1;border-radius:8px}
+  .dash{flex:none;width:42px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--muted);font-size:18px;cursor:pointer;transition:.15s}
+  .dash:hover{border-color:var(--accent);color:var(--accent)}
+  .dash.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  input:disabled{background:#eef2f4;color:#9aa8b2}
+  .err{display:none;color:var(--danger);font-size:12px;margin-top:5px}
+  .actions{grid-column:1/-1;display:flex;gap:12px;margin-top:6px}
+  button.btn{flex:1;padding:14px;font-size:16px;font-weight:700;border-radius:14px;border:0;cursor:pointer;transition:.15s}
+  .submit{color:#fff;background:linear-gradient(120deg,var(--accent2),var(--accent));box-shadow:0 8px 18px rgba(14,165,164,.35)}
+  .submit:hover{transform:translateY(-1px)}
+  .cancel{background:#eef2f4;color:#41525e}
+  .cancel:hover{background:#e2e9ed}
+  button:disabled{opacity:.6;cursor:wait}
+  .toast{grid-column:1/-1;display:none;padding:12px 14px;border-radius:12px;font-size:14px;font-weight:600}
+  .toast.ok{display:block;background:#e5f7ee;color:var(--ok)}
+  .toast.fail{display:block;background:#fdeaea;color:var(--danger)}
+  .hint{grid-column:1/-1;font-size:12px;color:var(--muted);text-align:center;margin-top:-6px}
+
+  /* panes: login, history, graph */
+  .pane{padding:26px 30px 30px}
+  .pane h2{margin:0 0 4px;font-size:20px}
+  .pane .sub{margin:0 0 14px;font-size:13px;color:var(--muted)}
+  .pane label{margin-top:14px}
+  .pane .btn{width:100%;margin-top:20px}
+  .chk{display:flex!important;align-items:center;gap:9px;text-transform:none!important;letter-spacing:0!important;font-size:14px!important;font-weight:500!important;color:var(--ink)!important}
+  .chk input{width:auto}
+  .phead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .mini{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--accent2);cursor:pointer}
+  .empty{padding:26px 0;text-align:center;color:var(--muted);font-size:14px}
+  .dhead2{margin:18px 0 8px;padding:7px 12px;background:#e8f4f5;color:var(--accent2);font-weight:800;font-size:14px;letter-spacing:.5px;border-radius:10px;text-align:center}
+  .rec{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fff}
+  .rtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .rtop b{font-size:16px}
+  .rtop span{font-size:12px;color:var(--muted)}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .tile{background:#f4f8f9;border-radius:10px;padding:8px 6px;text-align:center}
+  .tile small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+  .tile b{font-size:15px}
+  .tile i{font-style:normal;font-size:10.5px;color:var(--muted);margin-left:2px;font-weight:500}
+  .tile.bad{background:#fdeaea}
+  .tile.bad b{color:var(--danger)}
+  .rem{margin-top:8px;font-size:13px;color:#41525e;border-top:1px dashed var(--line);padding-top:7px;word-break:break-word}
+
+  .racts{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+  .racts .mini{padding:6px 12px}
+  .mini.del{color:var(--danger)}
+  .qbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px;background:#fff6e0;color:#8a5a00;font-size:13px;font-weight:600}
+  .qbar.ok{background:#e5f7ee;color:#1f9d63}
+  .qbar .mini{flex:none;padding:6px 12px}
+  .editbar{grid-column:1/-1;padding:10px 14px;border-radius:12px;background:#fff6e0;color:#8a5a00;font-size:13px;font-weight:600}
+
+  /* graph */
+  .dnav{display:flex;gap:8px;align-items:center}
+  .dnav input{flex:1;min-width:0}
+  .navb{flex:none;width:42px;height:46px;border:1.5px solid var(--line);background:#fff;border-radius:12px;font-size:24px;line-height:1;color:var(--accent2);cursor:pointer;padding:0}
+  .dnav .mini{height:46px}
+  .gcard{border:1.5px solid var(--line);border-radius:14px;padding:12px 10px 8px;margin-top:14px;background:#fff}
+  .gt{font-size:16px;font-weight:700;padding:0 4px}
+  .gt small{font-weight:500;color:var(--muted);font-size:12px;margin-left:4px}
+  .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+  .chips.one{grid-template-columns:1fr}
+  .chip{background:#f1f6f7;border-radius:10px;padding:7px 4px;text-align:center}
+  .chip small{display:block;font-size:11px;color:var(--muted)}
+  .chip b{font-size:15px}
+  .chip.bad{background:#fdeaea}
+  .chip.bad b{color:var(--danger)}
+  .lg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:#52606b;align-items:center;margin:10px 4px 2px}
+  .lg .i{display:inline-flex;align-items:center;gap:5px}
+  .sw{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .swb{width:16px;height:10px;border-radius:2px;display:inline-block;background:rgba(22,163,74,.2)}
+  .chart{width:100%;height:auto;display:block;touch-action:manipulation}
+  .nodata{padding:14px 4px 8px;font-size:13px;color:var(--muted)}
+  /* saved / wait popup (centre of the page) */
+  .flash{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:20px}
+  .fbox{background:#fff;border-radius:26px;padding:34px 40px 30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);max-width:88vw}
+  .ftick{width:116px;height:116px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 18px;font-size:60px;animation:pop .35s ease-out}
+  .ftxt{font-size:32px;font-weight:800;color:var(--ok);line-height:1.2}
+  .flash.wait .ftick{background:#e09a00}
+  .flash.wait .ftxt{color:#8a5a00;font-size:24px}
+  .flash.warn .ftick{background:#d32f2f;font-size:56px}
+  .flash.warn .ftxt{color:#b3261e;font-size:21px;line-height:1.35}
+  .ftxt{white-space:pre-line}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  /* 12-hour time picker */
+  .tsel{display:flex;gap:4px}
+  .tsel select{flex:1;min-width:0;padding:12px 2px;text-align:center;text-align-last:center;-webkit-appearance:none;appearance:none;background-image:none}
+  select:disabled{background:#eef2f4;color:#9aa8b2}
+  /* mobile time field: looks like one normal field (10:49 PM + clock); the picker opens in a popup */
+  .tfake{width:100%;min-height:47px;padding:12px 14px;font-size:15px;font-family:inherit;color:var(--ink);background:#f7fafb;border:1.5px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left}
+  .tfake:disabled{background:#eef2f4;color:#9aa8b2;cursor:default}
+  .tbox{width:min(340px,88vw);padding:24px 20px}
+  .ttl2{font-weight:800;font-size:17px;margin-bottom:16px;color:var(--ink)}
+  .tbox .tsel{gap:8px}
+  .tbox .tsel select{font-size:22px;padding:14px 2px}
+  .tbtns{display:flex;gap:10px;margin-top:18px}
+  .tbtns .btn{padding:12px}
+  .uact{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  /* patient drop-down in the header (replaces the pencil) */
+  .pnsw{position:relative;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);border-radius:8px;padding:2px 8px;font-size:13px;color:#fff;cursor:pointer}
+  .pnarrow{font-size:10px;line-height:1.7}
+  .pnsw select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;padding:0;border:0;border-radius:8px}
+  /* manage user: patients */
+  .ucard{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+  .utop{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:600}
+  .upl{margin:10px 0 6px;font-size:12px;font-weight:700;color:var(--muted)}
+  .upl .gu{display:inline;font-size:12px}
+  .upl small{font-weight:500}
+  .pchips{display:flex;flex-wrap:wrap;gap:6px}
+  .pch{display:inline-flex;align-items:center;background:#f1f6f7;border-radius:999px;border:1.5px solid var(--line)}
+  .pch.def{background:#e0f4f4;border-color:var(--accent)}
+  .pch button{border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:var(--ink);padding:6px 6px 6px 12px;cursor:pointer}
+  .pch button.px{padding:6px 11px 6px 4px;color:var(--danger);font-weight:800}
+  .padd{display:flex;gap:8px;margin-top:10px}
+  .padd input{flex:1;min-width:0;padding:9px 12px;font-size:14px}
+  /* Gujarati text inside buttons */
+  .mini .gu,.btn .gu{display:inline;margin:0 0 0 3px;font-size:12px;color:inherit}
+  .drawer .gu{font-size:12px;font-weight:600}
+  .pane h2 .gu{font-size:13px}
+  /* manage users */
+  .urow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff;font-weight:600}
+  .urow .you,.ucard .you{font-size:12px;color:var(--muted);font-weight:500}
+  .adm{display:inline-block;margin-left:6px;padding:2px 9px;border-radius:999px;background:#e0f4f4;color:var(--accent2);font-size:11px;font-weight:700;vertical-align:middle}
+  @media(max-width:520px){
+    form{grid-template-columns:1fr;padding:22px 20px}
+    header{padding:16px 14px}
+    header .ico{display:none}
+    .pane{padding:22px 18px}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .who{max-width:28%}
+    .pair{gap:8px}
+    .pair label{font-size:11px;letter-spacing:.3px}
+    .pair .gu{font-size:12px}
+  }
+
+  /* larger text so it is easy to read on a mobile */
+  header h1{font-size:23px}
+  .pn{font-size:14.5px}.pn input{font-size:14.5px}.pn button{font-size:14.5px}
+  .who{font-size:14.5px}
+  .drawer .dt{font-size:14px}.drawer button{font-size:18px}.drawer .gu{font-size:14px}
+  label{font-size:13.5px}
+  .gu{font-size:14px}
+  input,textarea,select{font-size:16.5px}
+  .radios .opt{font-size:16.5px}.radios .opt .gu{font-size:15px}
+  .section{font-size:15px}
+  .unit span{font-size:14px}
+  .err{font-size:13.5px}
+  .hint{font-size:13.5px}
+  .toast{font-size:15.5px}
+  .editbar,.qbar{font-size:14.5px}
+  button.btn{font-size:17.5px}
+  .tfake{font-size:16.5px}
+  .pane h2{font-size:22px}
+  .pane h2 .gu{font-size:14.5px}
+  .pane .sub{font-size:14.5px}
+  .chk{font-size:15.5px!important}
+  .mini{font-size:14.5px}
+  .empty{font-size:15.5px}
+  .dhead2{font-size:15.5px}
+  .lnkbtn{font-size:16.5px}
+  .rtop b{font-size:18px}.rtop span{font-size:13.5px}
+  .tile small{font-size:12px}.tile b{font-size:17px}.tile i{font-size:12px}
+  .rem{font-size:15px}
+  .gt{font-size:18px}.gt small{font-size:13.5px}
+  .chip small{font-size:12.5px}.chip b{font-size:17px}
+  .lg{font-size:13.5px}
+  .nodata{font-size:14.5px}
+  .utop{font-size:16.5px}.upl{font-size:13.5px}.upl .gu{font-size:13.5px}
+  .pch button{font-size:14.5px}
+  .padd input{font-size:15.5px}
+  .urow{font-size:16.5px}
+  .mini .gu,.btn .gu{font-size:13.5px}
+  .pane h2 .gu{font-size:14.5px}
+  @media(max-width:520px){
+    .pair label{font-size:12.5px}
+    .pair .gu{font-size:13.5px}
+  }
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<div class="flash hide" id="tpick"><div class="fbox tbox"><div class="ttl2">⏰ Select time <span class="gu">(સમય)</span></div><div class="tsel"><select id="th" aria-label="Hour"></select><select id="tm" aria-label="Minute"></select><select id="tp" aria-label="AM or PM"><option value="AM">AM</option><option value="PM">PM</option></select></div><div class="tbtns"><button type="button" class="btn cancel" id="tcancel">Cancel</button><button type="button" class="btn submit" id="tok">OK</button></div></div></div>
+<div class="flash hide" id="flash" role="status" aria-live="assertive"><div class="fbox"><div class="ftick" id="ftick"></div><div class="ftxt" id="ftxt"></div></div></div>
+<nav class="drawer" id="drawer">
+  <div class="dt">Menu</div>
+  <button type="button" data-go="entry">➕ New Entry<span class="gu">(નવી એન્ટ્રી)</span></button>
+  <button type="button" data-go="history">📋 History<span class="gu">(હિસ્ટ્રી)</span></button>
+  <button type="button" data-go="graph">📈 Graph<span class="gu">(ગ્રાફ)</span></button>
+  <button type="button" data-go="print">🖨️ Print<span class="gu">(પ્રિન્ટ)</span></button>
+  <button type="button" data-go="users" id="usersBtn" class="hide">⋮ Manage User<span class="gu">(યુઝર મેનેજ કરો)</span></button>
+  <button type="button" class="out" id="logout">🚪 Log out<span class="gu">(લોગ આઉટ)</span></button>
+</nav>
+
+<div class="card">
+  <header>
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="ico">🩺</div>
+    <div class="ttl">
+      <h1>Medical Record</h1>
+      <div class="pn hide" id="pnBox">
+        <span id="pnText">👤</span>
+        <span class="pnsw hide" id="pnSw"><span class="pnarrow" aria-hidden="true">▼</span><select id="pnSel" aria-label="Select patient"></select></span>
+      </div>
+    </div>
+    <div class="who hide" id="who"></div>
+  </header>
+
+  <div class="qbar hide" id="qbar" role="status" aria-live="polite"><span id="qtext"></span><button type="button" class="mini" id="qretry">Retry now</button></div>
+
+  <!-- SIGN IN -->
+  <section class="pane" id="v-login">
+    <h2>🔐 Log in <span class="gu">(લૉગ ઇન)</span></h2>
+    <p class="sub">Only people on the approved list can add or view records.</p>
+    <label for="lname">👤 Your name<span class="gu">(તમારું નામ)</span></label>
+    <select id="lname"><option value="">Loading…</option></select>
+    <label for="lpin">🔑 Password<span class="gu">(પાસવર્ડ)</span></label>
+    <input id="lpin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter your password">
+    <label class="chk"><input type="checkbox" id="remember"> Keep me logged in</label>
+    <div class="err" id="e-login"></div>
+    <button type="button" class="btn submit" id="loginBtn">Log in <span class="gu">(લૉગ ઇન)</span></button>
+  </section>
+
+  <!-- NEW ENTRY -->
+  <form id="v-entry" class="hide" novalidate>
+    <div class="editbar hide" id="editBar"></div>
+    <div class="full">
+      <div class="pair">
+        <div class="pcol">
+          <div class="lrow">
+            <label for="date">📅 Date<span class="gu">(તારીખ)</span></label>
+            <button type="button" class="dash" data-for="date" title="Not available">–</button>
+          </div>
+          <input type="date" id="date">
+        </div>
+        <div class="pcol">
+          <div class="lrow">
+            <label for="tnative">⏰ Time<span class="gu">(સમય)</span></label>
+            <button type="button" class="dash" data-for="time" title="Not available">–</button>
+          </div>
+          <input type="hidden" id="time">
+          <input type="time" id="tnative">
+          <button type="button" class="tfake hide" id="tfake" aria-label="Select time"><span id="tfakeTxt">--:-- --</span><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 6.5V12l3.6 2.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="pair">
+        <div class="pcol">
+          <label for="spo2">🩸 SpO2<span class="gu">(ઓક્સિજન)</span></label>
+          <div class="unit"><input id="spo2" inputmode="decimal" placeholder="e.g. 98" autocomplete="off"><span>%</span></div>
+          <div class="err" id="e-spo2">Enter a value between 50 and 100</div>
+        </div>
+        <div class="pcol">
+          <label for="hr">💓 Heartbeat<span class="gu">(ધબકારા)</span></label>
+          <div class="unit"><input id="hr" inputmode="numeric" placeholder="e.g. 72" autocomplete="off"><span>bpm</span></div>
+          <div class="err" id="e-hr">Enter a value between 20 and 250</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="pair">
+        <div class="pcol">
+          <label>🩺 BP <small>(Sys./Dia.)</small><span class="gu">(બીપી)</span></label>
+          <div class="bp2">
+            <div class="unit"><input id="sys" inputmode="numeric" placeholder="Sys." autocomplete="off"><span>mmHg</span></div>
+            <div class="unit"><input id="dia" inputmode="numeric" placeholder="Dia." autocomplete="off"><span>mmHg</span></div>
+          </div>
+          <div class="err" id="e-bp">Sys 50–260, Dia 30–160</div>
+        </div>
+        <div class="pcol">
+          <label for="temp">🌡️ Temperature<span class="gu">(તાવ)</span></label>
+          <div class="unit"><input id="temp" inputmode="decimal" placeholder="e.g. 98.6" autocomplete="off"><span>°F</span></div>
+          <div class="err" id="e-temp">Enter a value between 85 and 110</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">🏥 DLS</div>
+
+    <div class="full">
+      <div class="pair">
+        <div class="pcol">
+          <label for="pre">⚖️ Pre DLS Weight<span class="gu">(DLS પૂર્વેનું વજન)</span></label>
+          <div class="unit"><input id="pre" inputmode="decimal" placeholder="e.g. 62.5" autocomplete="off"><span>kg</span></div>
+          <div class="err" id="e-pre">Enter a value between 20 and 250</div>
+        </div>
+        <div class="pcol">
+          <label for="post">⚖️ Post DLS Weight<span class="gu">(DLS પછીનું વજન)</span></label>
+          <div class="unit"><input id="post" inputmode="decimal" placeholder="e.g. 60.0" autocomplete="off"><span>kg</span></div>
+          <div class="err" id="e-post">Enter a value between 20 and 250</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label for="neg">📉 Negative <small>(auto, editable)</small></label>
+      <div class="unit"><input id="neg" inputmode="decimal" placeholder="Pre − Post" autocomplete="off"><span>kg</span></div>
+      <div class="err" id="e-neg">Enter a value up to 20</div>
+    </div>
+    <div>
+      <label>💉 Injection Given<span class="gu">(ઈન્જેક્શન આપ્યું)</span></label>
+      <div class="radios">
+        <label class="opt"><input type="radio" name="inj" value="Yes"><span class="dot"></span>Yes <span class="gu">(હા)</span></label>
+        <label class="opt"><input type="radio" name="inj" value="No"><span class="dot"></span>No <span class="gu">(ના)</span></label>
+      </div>
+    </div>
+
+    <div class="full">
+      <label for="remark">📝 Remark<span class="gu">(નોંધ)</span></label>
+      <textarea id="remark" placeholder="Notes, symptoms, medication…"></textarea>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="actions">
+      <button type="button" class="btn cancel" id="cancel">✖ Cancel</button>
+      <button type="submit" class="btn submit" id="submit">✅ Submit</button>
+    </div>
+    <div class="hint">Fill in at least one reading. Empty fields are saved as "-" in the sheet.</div>
+  </form>
+
+  <!-- HISTORY -->
+  <section class="pane hide" id="v-history">
+    <div class="phead"><h2>📋 History <span class="gu">(હિસ્ટ્રી)</span></h2><button type="button" class="mini" id="hrefresh">🔄 Refresh</button></div>
+    <p class="sub">Readings from the last 2 days. Values outside the normal range are shown in red.</p>
+    <div id="hist"></div>
+  </section>
+
+  <!-- GRAPH -->
+  <section class="pane hide" id="v-graph">
+    <div class="phead"><h2>📈 Graph <span class="gu">(ગ્રાફ)</span></h2></div>
+    <p class="sub">Tap a chart to see the exact reading. Green area = normal range, red dot = out of range.</p>
+    <div class="dnav">
+      <button type="button" class="navb" id="gprev" aria-label="Previous day">‹</button>
+      <input type="date" id="gdate">
+      <button type="button" class="navb" id="gnext" aria-label="Next day">›</button>
+      <button type="button" class="mini" id="gtoday">Today</button>
+    </div>
+    <div id="gbox"></div>
+  </section>
+
+  <!-- PRINT -->
+  <section class="pane hide" id="v-print">
+    <div class="phead"><h2>🖨️ Print <span class="gu">(પ્રિન્ટ)</span></h2></div>
+    <p class="sub">Create an A4 PDF of the Google Sheet for the patient and dates you choose. Leave both dates empty to print all data.</p>
+    <label for="pprint">🧑‍⚕️ Patient <span class="gu">(દર્દી)</span></label>
+    <select id="pprint" aria-label="Patient to print"><option value="">Loading…</option></select>
+    <div class="pair">
+      <div class="pcol"><label for="pfrom">📅 From</label><input type="date" id="pfrom"></div>
+      <div class="pcol"><label for="pto">📅 To</label><input type="date" id="pto"></div>
+    </div>
+    <div class="qrow">
+      <button type="button" class="mini" data-q="today">Today</button>
+      <button type="button" class="mini" data-q="7">Last 7 days</button>
+      <button type="button" class="mini" data-q="30">Last 30 days</button>
+      <button type="button" class="mini" data-q="all">All data</button>
+    </div>
+    <div class="err" id="e-print"></div>
+    <button type="button" class="btn submit" id="pdfBtn">📄 Create PDF <span class="gu">(PDF બનાવો)</span></button>
+    <div id="pdfOut"></div>
+  </section>
+
+  <!-- MANAGE USERS (admin only) -->
+  <section class="pane hide" id="v-users">
+    <div class="phead"><h2>👥 Manage User <span class="gu">(યુઝર મેનેજ કરો)</span></h2></div>
+    <div id="u-lock">
+      <p class="sub">Enter your password to continue.</p>
+      <label for="upin">🔑 Password <span class="gu">(પાસવર્ડ)</span></label>
+      <input id="upin" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter your password">
+      <div class="err" id="e-ulock"></div>
+      <button type="button" class="btn submit" id="unlockBtn">🔓 Continue</button>
+    </div>
+    <div id="u-main" class="hide">
+      <p class="sub">Add a new user, or edit / delete an existing one.</p>
+      <div id="ulist"></div>
+      <div class="dhead2" id="uformTitle">➕ Add user</div>
+      <label for="unew">👤 Name</label>
+      <input id="unew" maxlength="40" autocomplete="off" placeholder="Full name">
+      <label for="unpin">🔑 Password <span class="gu">(પાસવર્ડ)</span></label>
+      <input id="unpin" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="4 to 8 digit password">
+      <div id="unpatBox">
+        <label for="unpat">🧑‍⚕️ Patient name <small>(optional)</small> <span class="gu">(દર્દીનું નામ)</span></label>
+        <input id="unpat" maxlength="40" autocomplete="off" placeholder="First patient for this user">
+      </div>
+      <div class="err" id="e-uadd"></div>
+      <button type="button" class="btn submit" id="uaddBtn">➕ Add user</button>
+      <button type="button" class="btn cancel hide" id="uCancel">✖ Cancel</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ====== Your Google Apps Script Web app URL ====== */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyltw9xHGGd36M2hXFbV44jih_GJFcECgTkesnnM2XkCgHsMgkEucOz10ywtJVxJtnz/exec";
+/* ================================================= */
+
+/* ====== Normal ranges used by the Graph page (keep in step with LIMITS at the top of the Apps Script) ====== */
+const LIM = { spo2Low: 94, hrLow: 60, hrHigh: 100, sysHigh: 140, sysLow: 90, diaHigh: 90, diaLow: 60, tempHigh: 99 };
+/* ========================================================================================================== */
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let session = null;
+let adminFlag = false, mainFlag = false;          // set by the server at login: admin / admin 2, and the main admin
+const isAuthErr = m => /PIN|password|attempts/i.test(m || "");
+
+/* ---------- patients: those assigned to the signed-in user, chosen from the drop-down in the header ---------- */
+let patients = [], defPatient = "", curPatient = "";
+function setPatients(r){
+  patients = (r && r.patients) || []; defPatient = (r && r.defaultPatient) || "";
+  curPatient = patients.indexOf(defPatient) >= 0 ? defPatient : (patients[0] || "");
+}
+function showPatient(){
+  $("pnText").textContent = "👤 " + (curPatient || "No patient assigned");
+  $("pnSel").innerHTML = patients.map(p => `<option value="${esc(p)}"${p === curPatient ? " selected" : ""}>${esc(p)}</option>`).join("");
+  $("pnSw").classList.toggle("hide", patients.length < 2);
+}
+$("pnSel").addEventListener("change", () => {
+  curPatient = $("pnSel").value; showPatient();
+  $("pdfOut").innerHTML = "";
+  if ([].some.call($("pprint").options, o => o.value === curPatient)) $("pprint").value = curPatient;
+  if (editing){ reset(); go("history"); return; }                  // an edit belongs to the previous patient
+  if (!$("v-history").classList.contains("hide")) loadHistory();   // History / Graph show the chosen patient
+  if (!$("v-graph").classList.contains("hide")) openGraph();
+});
+showPatient();
+
+/* ---------- server calls ---------- */
+async function call(action, extra){
+  const body = new URLSearchParams(Object.assign(
+    { action: action, name: session ? session.name : "", pin: session ? session.pin : "", patient: curPatient }, extra || {}));
+  const res = await fetch(SCRIPT_URL, { method: "POST", body: body });
+  return await res.json();
+}
+
+/* ---------- views + menu ---------- */
+function show(name){
+  if (name !== "users") adminPin = null;       // Manage User locks again when you leave it
+  ["login","entry","history","graph","print","users"].forEach(v => $("v-" + v).classList.toggle("hide", v !== name));
+  document.querySelectorAll(".drawer [data-go]").forEach(b => b.classList.toggle("active", b.dataset.go === name));
+  closeMenu();
+}
+function openMenu(){ $("drawer").classList.add("on"); $("overlay").classList.add("on"); }
+function closeMenu(){ $("drawer").classList.remove("on"); $("overlay").classList.remove("on"); }
+$("menuBtn").addEventListener("click", openMenu);
+$("overlay").addEventListener("click", closeMenu);
+document.querySelectorAll(".drawer [data-go]").forEach(b => b.addEventListener("click", () => go(b.dataset.go)));
+function go(v){
+  if ((v === "graph" || v === "print") && !isAdmin()) v = "entry";     // Graph and Print are for the admin only
+  show(v);
+  if (v === "entry" && editing) reset();
+  if (v === "history") loadHistory();
+  if (v === "graph") openGraph();
+  if (v === "print") openPrint();
+  if (v === "users") openUsers();
+}
+
+/* ---------- sign in ---------- */
+async function loadNames(){
+  const sel = $("lname");
+  try{
+    const r = await (await fetch(SCRIPT_URL + "?action=names")).json();
+    const names = (r && r.names) || [];
+    sel.innerHTML = names.length
+      ? '<option value="">Select your name</option>' + names.map(n => `<option>${esc(n)}</option>`).join("")
+      : '<option value="">No users set up yet</option>';
+  }catch(e){
+    sel.innerHTML = '<option value="">Could not load names</option>';
+    showLoginError("Could not reach the server. Check your internet and the script URL.");
+  }
+}
+function showLoginError(msg){ const e = $("e-login"); e.textContent = msg; e.style.display = msg ? "block" : "none"; }
+
+async function doLogin(name, pin, remember){
+  session = { name: name, pin: pin };
+  try{
+    const r = await call("login");
+    if (!r.ok){ session = null; return r.error || "Sign-in failed."; }
+    session = { name: r.name, pin: pin };
+    adminFlag = r.admin !== undefined ? !!r.admin : String(r.name).toLowerCase().indexOf(ADMIN_NAME) !== -1;
+    mainFlag = r.main !== undefined ? !!r.main : adminFlag;
+    setPatients(r);
+    try{
+      if (remember) localStorage.setItem("mr_session", JSON.stringify(session));
+      else localStorage.removeItem("mr_session");
+    }catch(e){}
+    enterApp();
+    return "";
+  }catch(e){
+    session = null;
+    return "Could not reach the server. Check your internet and the script URL.";
+  }
+}
+function enterApp(){
+  $("who").textContent = session.name; $("who").classList.remove("hide");
+  $("menuBtn").style.visibility = "visible";
+  $("usersBtn").classList.toggle("hide", !isAdmin());
+  document.querySelectorAll('.drawer [data-go="graph"],.drawer [data-go="print"]').forEach(b => b.classList.toggle("hide", !isAdmin()));
+  $("pnBox").classList.remove("hide");
+  showPatient();
+  $("lpin").value = ""; showLoginError("");
+  reset(); show("entry");
+  showQ(); flushQueue();
+}
+function logout(msg){
+  session = null;
+  try{ localStorage.removeItem("mr_session"); }catch(e){}
+  $("who").classList.add("hide"); $("menuBtn").style.visibility = "hidden";
+  patients = []; curPatient = ""; adminFlag = mainFlag = false;
+  $("usersBtn").classList.add("hide"); adminPin = null; $("pnBox").classList.add("hide");
+  show("login"); showLoginError(msg || "");
+  clearTimeout(qTimer); qTimer = null; $("qbar").classList.add("hide");
+}
+$("logout").addEventListener("click", () => {
+  closeMenu();
+  if (confirm("Are you sure you want to log out?\n(શું તમે લોગ આઉટ કરવા માંગો છો?)")) logout("");
+});
+$("loginBtn").addEventListener("click", async () => {
+  const name = $("lname").value, pin = $("lpin").value.trim();
+  if (!name || !pin) return showLoginError("Select your name and enter your password.");
+  const b = $("loginBtn"); b.disabled = true; b.textContent = "Logging in…";
+  const err = await doLogin(name, pin, $("remember").checked);
+  b.disabled = false; b.innerHTML = 'Log in <span class="gu">(લૉગ ઇન)</span>';
+  if (err) showLoginError(err);
+});
+$("lpin").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+
+function handleFail(r, box){
+  const msg = (r && r.error) || "Something went wrong.";
+  if (isAuthErr(msg)) return logout(msg);
+  if (/not assigned|No patient is assigned/i.test(msg)) refreshSelf();
+  box.innerHTML = '<div class="empty">' + esc(msg) + "</div>";
+}
+
+/* ---------- entry form ---------- */
+function setNowFor(id){
+  const d = new Date();
+  $(id).value = id === "date"
+    ? `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+    : `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (id === "time") timeUI();
+}
+function setNow(){
+  setNowFor("date"); setNowFor("time");
+  document.querySelectorAll(".dash").forEach(b => { b.classList.remove("on"); $(b.dataset.for).disabled = false; });
+  timeUI();
+}
+
+/* Time is chosen with Hour / Minute / AM-PM boxes so it always shows in 12-hour format.
+   The hidden #time field keeps the 24-hour HH:MM value the rest of the page and the server use. */
+const TH = $("th"), TM = $("tm"), TP = $("tp");
+TH.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${pad(i + 1)}</option>`).join("");
+TM.innerHTML = Array.from({length: 60}, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join("");
+function timeUI(){
+  const t = $("time"), m = /^(\d{2}):(\d{2})$/.exec(t.value);
+  let txt = "--:-- --";
+  $("tnative").value = m ? t.value : "";
+  if (m){
+    const h = +m[1];
+    TH.value = String(h % 12 || 12); TM.value = m[2]; TP.value = h >= 12 ? "PM" : "AM";
+    txt = pad(h % 12 || 12) + ":" + m[2] + " " + (h >= 12 ? "PM" : "AM");
+  }
+  $("tfakeTxt").textContent = txt;
+  $("tnative").disabled = $("tfake").disabled = t.disabled;
+}
+function timeFromUI(){
+  let h = (+TH.value) % 12; if (TP.value === "PM") h += 12;
+  $("time").value = pad(h) + ":" + TM.value;
+}
+// Phones/tablets: own 12-hour picker (the phone's built-in time box would show 24-hour time).
+// Computers keep the normal time box, which already shows 12-hour time.
+const isMobile = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+$("tnative").classList.toggle("hide", isMobile);
+$("tfake").classList.toggle("hide", !isMobile);
+$("tnative").addEventListener("change", () => { $("time").value = $("tnative").value; });
+$("tfake").addEventListener("click", () => {
+  if ($("time").disabled) return;
+  if (!/^\d{2}:\d{2}$/.test($("time").value)){
+    const d = new Date(), h = d.getHours();
+    TH.value = String(h % 12 || 12); TM.value = pad(d.getMinutes()); TP.value = h >= 12 ? "PM" : "AM";
+  }
+  $("tpick").classList.remove("hide");
+});
+$("tok").addEventListener("click", () => { timeFromUI(); timeUI(); $("tpick").classList.add("hide"); });
+$("tcancel").addEventListener("click", () => $("tpick").classList.add("hide"));
+$("tpick").addEventListener("click", e => { if (e.target === $("tpick")) $("tpick").classList.add("hide"); });
+document.querySelectorAll(".dash").forEach(b => b.addEventListener("click", () => {
+  const inp = $(b.dataset.for), on = b.classList.toggle("on");
+  inp.disabled = on;
+  if (on) inp.value = ""; else if (!inp.value) setNowFor(b.dataset.for);
+  timeUI();
+}));
+
+// Negative = Pre − Post, filled in automatically until you type your own value
+let negManual = false;
+const numOrNull = s => /^\d+(\.\d+)?$/.test(String(s).trim()) ? parseFloat(s) : null;
+function autoNeg(){
+  if (negManual) return;
+  const a = numOrNull($("pre").value), b = numOrNull($("post").value);
+  $("neg").value = (a !== null && b !== null) ? String(parseFloat((a - b).toFixed(2))) : "";
+}
+$("pre").addEventListener("input", autoNeg);
+$("post").addEventListener("input", autoNeg);
+$("neg").addEventListener("input", () => { negManual = $("neg").value.trim() !== ""; });
+
+function numOk(v, min, max){
+  v = v.trim();
+  if (v === "" || v === "-") return true;
+  if (!/^\d+(\.\d+)?$/.test(v)) return false;
+  const n = parseFloat(v); return n >= min && n <= max;
+}
+function negOk(v){
+  v = v.trim();
+  if (v === "" || v === "-") return true;
+  if (!/^-?\d+(\.\d+)?$/.test(v)) return false;
+  return Math.abs(parseFloat(v)) <= 20;
+}
+function mark(ids, ok, errId){
+  ids.forEach(i => $(i).classList.toggle("bad", !ok));
+  $(errId).style.display = ok ? "none" : "block";
+  return ok;
+}
+function validate(){
+  return [
+    mark(["spo2"], numOk($("spo2").value, 50, 100), "e-spo2"),
+    mark(["hr"],   numOk($("hr").value, 20, 250), "e-hr"),
+    mark(["sys","dia"], numOk($("sys").value, 50, 260) && numOk($("dia").value, 30, 160), "e-bp"),
+    mark(["temp"], numOk($("temp").value, 85, 110), "e-temp"),
+    mark(["pre"],  numOk($("pre").value, 20, 250), "e-pre"),
+    mark(["post"], numOk($("post").value, 20, 250), "e-post"),
+    mark(["neg"],  negOk($("neg").value), "e-neg"),
+  ].every(Boolean);
+}
+const val = id => {
+  const el = $(id);
+  if ((id === "date" || id === "time") && el.disabled) return "-";
+  return el.value.trim();
+};
+function toast(msg, ok){
+  const t = $("toast"); t.textContent = msg; t.className = "toast " + (ok ? "ok" : "fail");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.className = "toast", 5000);
+}
+function reset(){
+  if (editing) endEdit();
+  ["spo2","hr","sys","dia","temp","pre","post","neg","remark"].forEach(i => { $(i).value = ""; $(i).classList.remove("bad"); });
+  document.querySelectorAll('input[name="inj"]').forEach(r => r.checked = false);
+  document.querySelectorAll("#v-entry .err").forEach(e => e.style.display = "none");
+  negManual = false;
+  setNow();
+}
+$("cancel").addEventListener("click", () => {
+  const wasEditing = !!editing;
+  reset(); $("toast").className = "toast";
+  if (wasEditing) go("history");
+});
+
+/* ---------- edit an existing reading (opened from History) ---------- */
+let editing = null;
+function startEdit(r){
+  reset(); show("entry");
+  editing = { row: r.row, date: r.date, time: r.time };
+
+  $("date").value = dmy2iso(r.date); $("date").disabled = true;
+  document.querySelector('.dash[data-for="date"]').classList.add("hide");
+
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(r.time || "").trim());
+  if (m){
+    let h = (+m[1]) % 12; if (m[3].toUpperCase() === "PM") h += 12;
+    $("time").value = pad(h) + ":" + m[2];
+  } else if (String(r.time || "").trim() === "-"){
+    $("time").value = ""; $("time").disabled = true;
+    document.querySelector('.dash[data-for="time"]').classList.add("on");
+  } else { $("time").value = ""; }
+  timeUI();
+
+  const bp = String(r.bp || "").split("/"), clean = v => (v == null || v.trim() === "-") ? "" : v.trim();
+  const dd = v => clean(v == null ? "" : String(v));          // the sheet stores "-" for empty fields
+  $("spo2").value = dd(r.spo2); $("hr").value = dd(r.hr);
+  $("sys").value = clean(bp[0]); $("dia").value = clean(bp[1]);
+  $("temp").value = dd(r.temp);
+  $("pre").value = dd(r.pre); $("post").value = dd(r.post); $("neg").value = dd(r.neg);
+  const a = numOrNull(dd(r.pre)), c = numOrNull(dd(r.post));
+  negManual = !!dd(r.neg) && !(a !== null && c !== null && String(parseFloat((a - c).toFixed(2))) === dd(r.neg));
+  document.querySelectorAll('input[name="inj"]').forEach(x => x.checked = (x.value === r.inj));
+  $("remark").value = dd(r.remark);
+
+  $("editBar").textContent = "✏️ Editing the reading of " + r.date + (r.time ? " (" + fmtT(r.time) + ")" : "") + ". The date cannot be changed.";
+  $("editBar").classList.remove("hide");
+  $("submit").textContent = "💾 Save changes";
+}
+function endEdit(){
+  editing = null;
+  $("editBar").classList.add("hide");
+  document.querySelector('.dash[data-for="date"]').classList.remove("hide");
+  $("submit").textContent = "✅ Submit";
+}
+
+/* ---------- no internet: keep the entry on this phone and upload it when the connection is back ---------- */
+const QKEY = "mr_queue";
+const getQ = () => { try{ return JSON.parse(localStorage.getItem(QKEY) || "[]"); }catch(e){ return []; } };
+const setQ = q => { try{ localStorage.setItem(QKEY, JSON.stringify(q)); }catch(e){} };
+const newCid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+let qTimer = null, flushing = false;
+function showQ(){                                   // orange bar: how many entries are waiting
+  if (qTimer) return;                               // a result message is on screen
+  const n = getQ().length;
+  $("qbar").className = "qbar" + ((!n || !session) ? " hide" : "");
+  $("qtext").textContent = "📴 " + n + (n === 1 ? " entry is" : " entries are") + " saved on this phone, waiting to upload";
+  $("qretry").classList.remove("hide");
+}
+function qNotice(msg){                              // green bar for a few seconds
+  clearTimeout(qTimer);
+  $("qbar").className = "qbar ok";
+  $("qtext").textContent = msg;
+  $("qretry").classList.add("hide");
+  qTimer = setTimeout(() => { qTimer = null; showQ(); }, 6000);
+}
+async function flushQueue(){
+  if (flushing || !session || navigator.onLine === false) return;
+  const q = getQ();
+  if (!q.length) return;
+  flushing = true;
+  let sent = 0;
+  try{
+    while (q.length){
+      let r;
+      try{ r = await call("submit", Object.assign({ cid: q[0].cid }, q[0].params)); }catch(e){ break; }   // still offline
+      if (r.ok){ q.shift(); setQ(q); sent++; continue; }
+      if (isAuthErr(r.error || "")) logout(r.error);
+      break;
+    }
+  } finally {
+    flushing = false;
+    if (sent){
+      qNotice("✅ " + sent + (sent === 1 ? " saved entry was" : " saved entries were") + " uploaded to Google Sheet");
+      if (!$("v-history").classList.contains("hide")) loadHistory();
+    } else showQ();
+  }
+}
+$("qretry").addEventListener("click", flushQueue);
+window.addEventListener("online", flushQueue);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) flushQueue(); });
+setInterval(flushQueue, 30000);
+
+/* ---------- centre popup ("Data Saved" / "Wait, Data is uploading") ---------- */
+let flashT = null;
+const TICK_SVG = '<svg viewBox="0 0 52 52" width="68" height="68" aria-hidden="true"><path d="M13 27l9 9 17-19" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function showFlash(kind, text, ms){
+  const f = $("flash");
+  f.className = "flash " + kind;
+  $("ftick").innerHTML = kind === "ok" ? TICK_SVG : kind === "warn" ? "⚠️" : "⏳";
+  $("ftxt").textContent = text;
+  clearTimeout(flashT); flashT = setTimeout(() => f.classList.add("hide"), ms || 1800);
+}
+$("flash").addEventListener("click", () => $("flash").classList.add("hide"));
+
+/* While data is uploading, the Back button (and closing the tab) is blocked with a message */
+let uploading = false, guardOn = false;
+function beginUpload(){
+  uploading = true;
+  if (!guardOn){ try{ history.pushState({ mrGuard: 1 }, ""); guardOn = true; }catch(e){} }
+}
+function endUpload(){
+  uploading = false;
+  if (guardOn){ guardOn = false; try{ history.back(); }catch(e){} }
+}
+window.addEventListener("popstate", () => {
+  if (!uploading) return;
+  try{ history.pushState({ mrGuard: 1 }, ""); guardOn = true; }catch(e){}
+  showFlash("wait", "Wait, Data is uploading", 2200);
+});
+window.addEventListener("beforeunload", e => { if (uploading){ e.preventDefault(); e.returnValue = ""; } });
+
+$("v-entry").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!validate()) return toast("⚠️ Please correct the highlighted fields.", false);
+
+  if (!curPatient) return toast("⚠️ No patient is assigned to you. Ask the admin to add one.", false);
+  const sys = val("sys"), dia = val("dia");
+  const bp = (sys || dia) ? `${sys || "-"}/${dia || "-"}` : "";   // e.g. 145/86
+  const inj = (document.querySelector('input[name="inj"]:checked') || {}).value || "";
+  // an entry with nothing filled in (only date / time) is not accepted
+  const hasData = ["spo2","hr","sys","dia","temp","pre","post","neg","remark"].some(i => ["", "-"].indexOf(val(i)) < 0) || !!inj;
+  if (!hasData) return showFlash("warn", "Please enter at least one reading before submitting.\n(ઓછામાં ઓછું એક રીડિંગ દાખલ કરો)", 3500);
+  const fields = {
+    time: val("time"), spo2: val("spo2"), heartbeat: val("hr"), bp: bp, temperature: val("temp"),
+    dls_pre: val("pre"), dls_post: val("post"), dls_neg: val("neg"), dls_inj: inj, remark: val("remark")
+  };
+  const btn = $("submit"); btn.disabled = true; btn.textContent = "Saving…";
+  beginUpload();
+
+  if (editing){
+    try{
+      const r = await call("update", Object.assign({ row: editing.row, orig_date: editing.date, orig_time: editing.time }, fields));
+      if (r.ok){ reset(); go("history"); }
+      else if (isAuthErr(r.error || "")) logout(r.error);
+      else toast("⚠️ " + (r.error || "Could not save the changes."), false);
+    }catch(err){
+      toast("⚠️ Could not reach the server. Your changes were not saved.", false);
+    }finally{
+      btn.disabled = false; btn.textContent = editing ? "💾 Save changes" : "✅ Submit";
+      endUpload();
+    }
+    return;
+  }
+
+  const params = Object.assign({ date: val("date"), patient: curPatient }, fields);
+  const cid = newCid();
+  const keepOnPhone = () => {
+    const q = getQ(); q.push({ cid: cid, params: params }); setQ(q);
+    toast("📴 No internet. Saved on this phone — it will upload automatically when the connection is back.", true);
+    reset(); showQ();
+  };
+  try{
+    if (navigator.onLine === false) return keepOnPhone();
+    const r = await call("submit", Object.assign({ cid: cid }, params));
+    if (r.ok){ reset(); showFlash("ok", "Data Saved", 1800); }
+    else if (isAuthErr(r.error || "")) logout(r.error);
+    else toast("⚠️ " + (r.error || "Could not save."), false);
+  }catch(err){
+    // No connection, or the reply was lost. The entry id (cid) stops the server saving it twice on retry.
+    keepOnPhone();
+  }finally{
+    btn.disabled = false; btn.textContent = editing ? "💾 Save changes" : "✅ Submit";
+    endUpload();
+  }
+});
+
+/* ---------- helpers for History / Graph ---------- */
+const tmin = t => {
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(t || "").trim());
+  if (!m) return null;
+  let h = (+m[1]) % 12; if (m[3].toUpperCase() === "PM") h += 12;
+  return h * 60 + (+m[2]);
+};
+const fmtT = t => {
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(t || "").trim());
+  return m ? (+m[1]) + (m[2] === "00" ? "" : ":" + m[2]) + " " + m[3].toUpperCase() : (t || "-");
+};
+const dkey = d => d.slice(6) + d.slice(3, 5) + d.slice(0, 2);
+const iso2dmy = s => /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.slice(8) + "-" + s.slice(5, 7) + "-" + s.slice(0, 4) : "";
+const dmy2iso = d => d.slice(6) + "-" + d.slice(3, 5) + "-" + d.slice(0, 2);
+const todayDmy = () => { const d = new Date(); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; };
+
+/* ---------- History ---------- */
+const numF = s => /^-?\d+(\.\d+)?$/.test(String(s == null ? "" : s).trim()) ? parseFloat(s) : null;
+// out-of-range check done here as well (same limits as the Apps Script), so upper-limit values are always red
+function flagsOf(r){
+  const sv = r.flags || {};
+  const f = { spo2: !!sv.spo2, hr: !!sv.hr, bp: !!sv.bp, temp: !!sv.temp };
+  const a = numF(r.spo2); if (a !== null && a < LIM.spo2Low) f.spo2 = true;
+  const h = numF(r.hr); if (h !== null && (h < LIM.hrLow || h > LIM.hrHigh)) f.hr = true;
+  const p = String(r.bp || "").split("/"), s = numF(p[0]), d = numF(p[1]);
+  if (s !== null && (s >= LIM.sysHigh || s < LIM.sysLow)) f.bp = true;
+  if (d !== null && (d >= LIM.diaHigh || d < LIM.diaLow)) f.bp = true;
+  const t = numF(r.temp); if (t !== null && t >= LIM.tempHigh) f.temp = true;
+  return f;
+}
+function tile(label, v, unit, bad){
+  if (v === "" || v == null || String(v).trim() === "-") return "";
+  return `<div class="tile${bad ? " bad" : ""}"><small>${label}</small><b>${esc(v)}${unit ? `<i>${unit}</i>` : ""}</b></div>`;
+}
+function recCard(r){
+  const f = flagsOf(r);
+  return `<div class="rec"><div class="rtop"><b>⏰ ${esc(r.time || "-")}</b><span>👤 ${esc(r.by || "")}</span></div><div class="tiles">` +
+    tile("🩸 SpO2", r.spo2, "%", f.spo2) + tile("💓 Heartbeat", r.hr, "", f.hr) + tile("🩺 BP", r.bp, "", f.bp) + tile("🌡️ Temp", r.temp, "°F", f.temp) +
+    tile("⚖️ Pre DLS", r.pre, "kg") + tile("⚖️ Post DLS", r.post, "kg") + tile("📉 Negative", r.neg, "kg") + tile("💉 Injection", r.inj, "") +
+    `</div>` + (r.remark && String(r.remark).trim() !== "-" ? `<div class="rem">📝 ${esc(r.remark)}</div>` : "") +
+    (r.row ? `<div class="racts"><button type="button" class="mini" data-act="edit" data-row="${r.row}">✏️ Edit <span class="gu">(સુધારો)</span></button>` +
+      (isAdmin() ? `<button type="button" class="mini del" data-act="del" data-row="${r.row}">🗑️ Delete <span class="gu">(રદ કરો)</span></button>` : "") + `</div>` : "") + `</div>`;
+}
+let histRows = {};
+function renderHistory(rows){
+  const box = $("hist");
+  histRows = {}; rows.forEach(r => { if (r.row) histRows[r.row] = r; });
+  if (!rows.length){ box.innerHTML = '<div class="empty">No readings yet.</div>'; return; }
+  const by = {};
+  rows.forEach(r => (by[r.date] = by[r.date] || []).push(r));
+  const dates = Object.keys(by).sort((a, b) => dkey(b).localeCompare(dkey(a)));
+  const tm = r => { const m = tmin(r.time); return m === null ? -1 : m; };
+  box.innerHTML = dates.map(d =>
+    `<div class="dhead2">📅 ${esc(d)}</div>` + by[d].sort((a, b) => tm(b) - tm(a)).map(recCard).join("")
+  ).join("");
+}
+async function loadHistory(){
+  const box = $("hist");
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const r = await call("history");
+    if (!r.ok) return handleFail(r, box);
+    renderHistory(r.rows);
+  }catch(e){ box.innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; }
+}
+$("hrefresh").addEventListener("click", loadHistory);
+
+$("hist").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const r = histRows[b.dataset.row];
+  if (!r) return;
+  if (b.dataset.act === "edit") return startEdit(r);
+  if (!isAdmin()) return;                                  // only the admin can delete a reading
+  if (!confirm("Delete the " + (r.time || "-") + " reading of " + r.date + "?\n\nThis cannot be undone.")) return;
+  b.disabled = true;
+  try{
+    const res = await call("delete", { row: r.row, orig_date: r.date, orig_time: r.time });
+    if (res.ok) loadHistory();
+    else if (isAuthErr(res.error || "")) logout(res.error);
+    else { alert(res.error || "Could not delete."); loadHistory(); }
+  }catch(err){
+    b.disabled = false;
+    alert("Could not reach the server. Nothing was deleted.");
+  }
+});
+
+/* ---------- Graph ---------- */
+const RED = "#d32f2f";
+const CH = {};                       // chart registry: id -> config (so a tap can redraw with a tooltip)
+const badSys = v => v >= LIM.sysHigh || v < LIM.sysLow;
+const badDia = v => v >= LIM.diaHigh || v < LIM.diaLow;
+const badSp  = v => v < LIM.spo2Low;
+const badHr  = v => v < LIM.hrLow || v > LIM.hrHigh;
+const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+
+function niceTicks(lo, hi){
+  const raw = (hi - lo) / 4;
+  const st = [1, 2, 5, 10, 20, 25, 50].find(s => s >= raw) || 50;
+  const out = [];
+  for (let t = Math.ceil(lo / st) * st; t <= hi; t += st) out.push(t);
+  return out;
+}
+
+function drawChart(id){
+  const c = CH[id], n = c.labels.length;
+  const W = 340, L = 38, R = 12, T = 22, B = 34, H = c.H, iw = W - L - R, ih = H - T - B;
+  const px = i => n === 1 ? L + iw / 2 : L + 26 + (iw - 52) * i / (n - 1);
+  const py = v => T + ih * (c.yMax - v) / (c.yMax - c.yMin);
+  const cl = v => Math.max(c.yMin, Math.min(c.yMax, v));
+  const step = Math.ceil(n / 6);
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(c.aria)}">`;
+  c.bands.forEach(b => {
+    const y1 = py(cl(b[1])), y2 = py(cl(b[0]));
+    if (y2 > y1) s += `<rect x="${L}" y="${y1}" width="${iw}" height="${y2 - y1}" fill="#16a34a" fill-opacity="0.14"/>`;
+  });
+  c.ticks.forEach(t => {
+    s += `<line x1="${L}" x2="${W - R}" y1="${py(t)}" y2="${py(t)}" stroke="#e3ebef"/>` +
+         `<text x="${L - 6}" y="${py(t) + 4}" text-anchor="end" font-size="12" fill="#6b7c88">${t}</text>`;
+  });
+  c.labels.forEach((lb, i) => {
+    if (n > 6 && i % step !== 0) return;
+    s += `<text x="${px(i)}" y="${H - 11}" text-anchor="middle" font-size="12" fill="#6b7c88">${esc(lb)}</text>`;
+  });
+  if (c.sel >= 0) s += `<line x1="${px(c.sel)}" x2="${px(c.sel)}" y1="${T}" y2="${T + ih}" stroke="#9fb3bd" stroke-dasharray="4 4"/>`;
+  c.series.forEach(se => {
+    const pts = se.vals.map((v, i) => v == null ? null : [px(i), py(v)]).filter(Boolean);
+    if (pts.length > 1) s += `<path d="${pts.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ")}" fill="none" stroke="${se.color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  });
+  c.series.forEach(se => {
+    se.vals.forEach((v, i) => {
+      if (v == null) return;
+      const bad = se.bad(v), x = px(i), y = py(v);
+      const r = n === 1 ? 9 : (bad ? 7 : 5.5);
+      s += bad ? `<circle cx="${x}" cy="${y}" r="${r}" fill="${RED}" stroke="#fff" stroke-width="2"/>`
+               : `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${se.color}" stroke-width="3"/>`;
+      if (n <= 6 || i % step === 0 || bad || i === c.sel){
+        s += `<text x="${x}" y="${y + (se.below ? r + 13 : -(r + 5))}" text-anchor="middle" font-size="${n === 1 ? 16 : 13}" font-weight="700" fill="${bad ? RED : se.color}">${v}</text>`;
+      }
+    });
+  });
+  if (c.sel >= 0 && c.tips[c.sel]){
+    const tp = c.tips[c.sel], x0 = px(c.sel);
+    const ys = c.series.map(se => se.vals[c.sel]).filter(v => v != null).map(py);
+    const top = Math.min.apply(null, ys), bot = Math.max.apply(null, ys);
+    const bw = 142, bh = 40;
+    const bx = Math.max(4, Math.min(W - bw - 4, x0 - bw / 2));
+    let by = top - bh - 16; if (by < 2) by = bot + 18;
+    s += `<g pointer-events="none"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="9" fill="#1b2a35"/>` +
+         `<text x="${bx + bw / 2}" y="${by + 16}" text-anchor="middle" font-size="11" fill="#cfe3e6">${esc(tp.t)}</text>` +
+         `<text x="${bx + bw / 2}" y="${by + 33}" text-anchor="middle" font-size="13" font-weight="700" fill="${tp.bad ? "#ff9b9b" : "#ffffff"}">${esc(tp.v)} · ${tp.st}</text></g>`;
+  }
+  const cw = n === 1 ? iw : iw / n;
+  for (let i = 0; i < n; i++){
+    s += `<rect data-ch="${id}" data-i="${i}" x="${px(i) - cw / 2}" y="${T - 6}" width="${cw}" height="${ih + 12}" fill="transparent" style="cursor:pointer"/>`;
+  }
+  $(id).innerHTML = s + "</svg>";
+}
+$("gbox").addEventListener("click", e => {
+  const t = e.target;
+  if (!t.dataset || !t.dataset.ch) return;
+  const c = CH[t.dataset.ch], i = +t.dataset.i;
+  c.sel = c.sel === i ? -1 : i;
+  drawChart(t.dataset.ch);
+});
+
+function chips(items){
+  return `<div class="chips${items.length === 1 ? " one" : ""}">` +
+    items.map(it => `<div class="chip${it.bad ? " bad" : ""}"><small>${it.l}</small><b>${esc(it.v)}</b></div>`).join("") + "</div>";
+}
+function legend(names, extraSw){
+  return '<div class="lg">' + names.map(n => `<span class="i"><span class="sw" style="background:${n[1]}"></span>${n[0]}</span>`).join("") +
+    '<span class="i"><span class="swb"></span>Normal range</span><span class="i"><span class="sw" style="background:' + RED + '"></span>Out of range</span></div>';
+}
+
+function bpCard(pts){
+  const id = "ch-bp", title = '<div class="gt">🩺 Blood pressure<small>mmHg</small></div>';
+  const P = pts.filter(p => p.sys !== null || p.dia !== null);
+  if (!P.length) return `<div class="gcard">${title}<div class="nodata">No BP readings on this date.</div></div>`;
+  const S = P.filter(p => p.sys !== null);
+  const all = []; P.forEach(p => { if (p.sys !== null) all.push(p.sys); if (p.dia !== null) all.push(p.dia); });
+  const yMin = Math.min(50, Math.floor((Math.min.apply(null, all) - 10) / 10) * 10);
+  const yMax = Math.max(160, Math.ceil((Math.max.apply(null, all) + 10) / 10) * 10);
+  const f = p => `${p.sys !== null ? p.sys : "-"}/${p.dia !== null ? p.dia : "-"}`;
+  const isBad = p => (p.sys !== null && badSys(p.sys)) || (p.dia !== null && badDia(p.dia));
+  const status = p => {
+    if ((p.sys !== null && p.sys >= LIM.sysHigh) || (p.dia !== null && p.dia >= LIM.diaHigh)) return "High";
+    if ((p.sys !== null && p.sys < LIM.sysLow) || (p.dia !== null && p.dia < LIM.diaLow)) return "Low";
+    return "Normal";
+  };
+  CH[id] = { H: 236, yMin: yMin, yMax: yMax, ticks: niceTicks(yMin, yMax), bands: [[LIM.sysLow, LIM.sysHigh - 1], [LIM.diaLow, LIM.diaHigh - 1]],
+    labels: P.map(p => fmtT(p.label)), sel: -1, aria: "Blood pressure chart",
+    series: [
+      { color: "#0b7f85", vals: P.map(p => p.sys), bad: badSys },
+      { color: "#2563eb", vals: P.map(p => p.dia), bad: badDia, below: true }],
+    tips: P.map(p => ({ t: p.label, v: f(p), st: status(p), bad: isBad(p) })) };
+  let sum = "";
+  if (S.length){
+    const latest = S[S.length - 1];
+    const hi = S.reduce((a, b) => b.sys > a.sys ? b : a), lo = S.reduce((a, b) => b.sys < a.sys ? b : a);
+    const ds = P.filter(p => p.dia !== null).map(p => p.dia);
+    const aS = Math.round(avg(S.map(p => p.sys))), aD = ds.length ? Math.round(avg(ds)) : null;
+    sum = P.length === 1 ? chips([{ l: "Reading", v: f(latest), bad: isBad(latest) }]) : chips([
+      { l: "Latest", v: f(latest), bad: isBad(latest) }, { l: "Highest", v: f(hi), bad: isBad(hi) },
+      { l: "Lowest", v: f(lo), bad: isBad(lo) },
+      { l: "Average", v: aS + "/" + (aD !== null ? aD : "-"), bad: badSys(aS) || (aD !== null && badDia(aD)) }]);
+  }
+  return `<div class="gcard">${title}${sum}${legend([["Systolic", "#0b7f85"], ["Diastolic", "#2563eb"]])}<div id="${id}"></div></div>`;
+}
+function singleCard(id, title, unit, color, P, key, badFn, lo, hi, minRange, maxRange, nm){
+  const head = `<div class="gt">${title}<small>${unit}</small></div>`;
+  if (!P.length) return `<div class="gcard">${head}<div class="nodata">No readings on this date.</div></div>`;
+  const vals = P.map(p => p[key]);
+  const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  const yMin = lo(mn), yMax = hi(mx);
+  CH[id] = { H: 206, yMin: yMin, yMax: yMax, ticks: niceTicks(yMin, yMax), bands: [minRange(), maxRange()].length ? [[minRange(), maxRange()]] : [],
+    labels: P.map(p => fmtT(p.label)), sel: -1, aria: nm + " chart",
+    series: [{ color: color, vals: vals, bad: badFn }],
+    tips: P.map(p => ({ t: p.label, v: String(p[key]), st: badFn(p[key]) ? (nm === "SpO2" || p[key] < LIM.hrLow ? "Low" : "High") : "Normal", bad: badFn(p[key]) })) };
+  const latest = vals[vals.length - 1], a = Math.round(avg(vals));
+  const sum = P.length === 1 ? chips([{ l: "Reading", v: latest, bad: badFn(latest) }]) : chips([
+    { l: "Latest", v: latest, bad: badFn(latest) }, { l: "Highest", v: mx, bad: badFn(mx) },
+    { l: "Lowest", v: mn, bad: badFn(mn) }, { l: "Average", v: a, bad: badFn(a) }]);
+  return `<div class="gcard">${head}${sum}${legend([[nm, color]])}<div id="${id}"></div></div>`;
+}
+
+function renderGraph(rows, dmy){
+  const box = $("gbox");
+  const pn = s => /^\d+(\.\d+)?$/.test(String(s || "").trim()) ? parseFloat(s) : null;
+  const pts = rows.map(r => {
+    const p = String(r.bp || "").split("/");
+    return { label: r.time || "-", m: tmin(r.time), sys: pn(p[0]), dia: pn(p[1]), spo2: pn(r.spo2), hr: pn(r.hr) };
+  }).sort((a, b) => (a.m === null ? 1e9 : a.m) - (b.m === null ? 1e9 : b.m));
+  if (!pts.some(p => p.sys !== null || p.dia !== null || p.spo2 !== null || p.hr !== null)){
+    box.innerHTML = `<div class="empty">No BP, SpO2 or heartbeat readings on ${esc(dmy)}.</div>`; return;
+  }
+  Object.keys(CH).forEach(k => delete CH[k]);
+  const spP = pts.filter(p => p.spo2 !== null), hrP = pts.filter(p => p.hr !== null);
+  box.innerHTML =
+    bpCard(pts) +
+    singleCard("ch-sp", "🩸 SpO2", "%", "#0ea5a4", spP, "spo2", badSp,
+      mn => Math.min(88, Math.floor(mn) - 2), () => 100, () => LIM.spo2Low, () => 100, "SpO2") +
+    singleCard("ch-hr", "💓 Heartbeat", "beats per minute", "#7c3aed", hrP, "hr", badHr,
+      mn => Math.min(40, Math.floor((mn - 10) / 10) * 10), mx => Math.max(120, Math.ceil((mx + 10) / 10) * 10), () => LIM.hrLow, () => LIM.hrHigh, "Heartbeat");
+  Object.keys(CH).forEach(drawChart);
+}
+
+async function loadDay(){
+  const d = iso2dmy($("gdate").value), box = $("gbox");
+  if (!d) return;
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const r = await call("day", { date: d });
+    if (!r.ok) return handleFail(r, box);
+    renderGraph(r.rows, d);
+  }catch(e){ box.innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; }
+}
+async function openGraph(){
+  const box = $("gbox");
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const r = await call("history");
+    if (!r.ok) return handleFail(r, box);
+    const dates = Array.from(new Set(r.rows.map(x => x.date))).sort((a, b) => dkey(b).localeCompare(dkey(a)));
+    const d = dates[0] || todayDmy();
+    $("gdate").value = dmy2iso(d);
+    renderGraph(r.rows.filter(x => x.date === d), d);
+  }catch(e){ box.innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; }
+}
+function shiftDate(days){
+  const v = $("gdate").value;
+  const b = v ? new Date(v + "T00:00:00") : new Date();
+  b.setDate(b.getDate() + days);
+  $("gdate").value = `${b.getFullYear()}-${pad(b.getMonth()+1)}-${pad(b.getDate())}`;
+  loadDay();
+}
+$("gdate").addEventListener("change", loadDay);
+$("gprev").addEventListener("click", () => shiftDate(-1));
+$("gnext").addEventListener("click", () => shiftDate(1));
+$("gtoday").addEventListener("click", () => {
+  const d = new Date();
+  $("gdate").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  loadDay();
+});
+
+/* ---------- Print (A4 PDF of the Google Sheet) ---------- */
+let pdfUrl = null, printInit = false;
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function setRange(q){
+  if (q === "all"){ $("pfrom").value = ""; $("pto").value = ""; return; }
+  const t = new Date(), f = new Date();
+  f.setDate(f.getDate() - (q === "7" ? 6 : q === "30" ? 29 : 0));
+  $("pfrom").value = isoOf(f); $("pto").value = isoOf(t);
+}
+function openPrint(){
+  if (!printInit){ setRange("today"); printInit = true; }
+  loadPrintPatients();
+}
+/* Patient drop-down: the admin sees every patient in the "Patient List" tab (starting with their own default patient);
+   other users see only their assigned patients that are still in the Patient List. Patients removed from the list are
+   shown to the admin only, under "Removed patients", so their saved records can still be printed. */
+async function loadPrintPatients(){
+  const sel = $("pprint"), keep = curPatient;
+  sel.innerHTML = '<option value="">Loading…</option>';
+  let list = patients.slice(), arch = [];
+  try{
+    const r = await call("printlist");
+    if (r.ok){ list = r.patients || []; arch = r.archived || []; }
+    else if (isAuthErr(r.error)) return logout(r.error);
+  }catch(e){}
+  const opt = p => `<option value="${esc(p)}">${esc(p)}</option>`;
+  let html = list.map(opt).join("");
+  if (arch.length) html += '<optgroup label="Removed patients (admin only)">' + arch.map(opt).join("") + "</optgroup>";
+  sel.innerHTML = html || '<option value="">No patient available</option>';
+  sel.value = (list.concat(arch).indexOf(keep) >= 0) ? keep : (list[0] || "");
+}
+$("pprint").addEventListener("change", () => { $("pdfOut").innerHTML = ""; });
+document.querySelectorAll("[data-q]").forEach(b => b.addEventListener("click", () => { setRange(b.dataset.q); $("pdfOut").innerHTML = ""; }));
+$("pdfBtn").addEventListener("click", async () => {
+  const from = $("pfrom").value, to = $("pto").value, err = $("e-print"), out = $("pdfOut"), btn = $("pdfBtn");
+  err.style.display = "none"; out.innerHTML = "";
+  const fail = m => { err.textContent = m; err.style.display = "block"; };
+  const pat = $("pprint").value;
+  if (!pat) return fail("Select a patient.");
+  if (from && to && from > to) return fail("‘From’ date must be on or before ‘To’ date.");
+  btn.disabled = true; btn.textContent = "Preparing PDF…";
+  try{
+    const r = await call("pdf", { from: iso2dmy(from), to: iso2dmy(to), patient: pat });
+    if (!r.ok){
+      if (isAuthErr(r.error || "")) return logout(r.error);
+      return fail(r.error || "Could not create the PDF.");
+    }
+    const bin = atob(r.data), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    pdfUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    out.innerHTML = `<div class="lnks"><a class="lnkbtn pri" href="${pdfUrl}" target="_blank" rel="noopener">🖨️ Open / Print</a>` +
+                    `<a class="lnkbtn" href="${pdfUrl}" download="${esc(r.name)}">⬇️ Download</a></div>`;
+  }catch(e){
+    fail("Could not create the PDF. Check your internet and that the new script version is deployed.");
+  }finally{
+    btn.disabled = false; btn.innerHTML = '📄 Create PDF <span class="gu">(PDF બનાવો)</span>';
+  }
+});
+
+/* ---------- Manage User (admin / admin 2 only; needs the password again) ---------- */
+const ADMIN_NAME = "gunjan";          // main admin (only used if the server is the old version; keep same as the Apps Script)
+let adminPin = null, userMap = {};
+const isAdmin = () => !!session && adminFlag;     // admin or admin 2 (decided by the server at login)
+function openUsers(){
+  if (!isAdmin()) return go("entry");
+  adminPin = null;
+  $("u-lock").classList.remove("hide"); $("u-main").classList.add("hide");
+  $("upin").value = ""; $("e-ulock").style.display = "none";
+  endUserEdit();
+  setTimeout(() => $("upin").focus(), 50);
+}
+async function unlockUsers(){
+  const pin = $("upin").value.trim(), err = $("e-ulock"), b = $("unlockBtn");
+  const fail = m => { err.textContent = m; err.style.display = "block"; };
+  if (!pin) return fail("Enter your password.");
+  b.disabled = true;
+  try{
+    const r = await call("login", { pin: pin });        // the server checks the PIN again
+    if (!r.ok) return fail(r.error || "Wrong password.");
+    adminPin = pin; err.style.display = "none"; $("upin").value = "";
+    $("u-lock").classList.add("hide"); $("u-main").classList.remove("hide");
+    loadUserList();
+  }catch(e){ fail("Could not reach the server. Check your internet."); }
+  finally{ b.disabled = false; }
+}
+$("unlockBtn").addEventListener("click", unlockUsers);
+$("upin").addEventListener("keydown", e => { if (e.key === "Enter") unlockUsers(); });
+
+async function loadUserList(){
+  const box = $("ulist");
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const r = await call("listusers", { pin: adminPin });
+    if (!r.ok){ box.innerHTML = '<div class="empty">' + esc(r.error || "Could not load users.") + "</div>"; return; }
+    userMap = {}; r.users.forEach(u => { userMap[u.name] = u; });
+    box.innerHTML = r.users.length ? r.users.map(userCard).join("") : '<div class="empty">No users yet.</div>';
+  }catch(e){ box.innerHTML = '<div class="empty">Could not load users. Check your internet.</div>'; }
+}
+function userCard(u){
+  const n = esc(u.name), self = u.name === session.name, locked = u.main && !mainFlag;   // only the main admin can change the main admin
+  const badge = u.main ? '<span class="adm">Admin</span>' : (u.admin2 ? '<span class="adm">Admin 2</span>' : "");
+  const roleBtn = (mainFlag && !u.main)
+    ? `<button type="button" class="mini" data-role="${n}" data-to="${u.admin2 ? "" : "admin2"}">${u.admin2 ? "⭐ Remove Admin 2" : "⭐ Make Admin 2"}</button>` : "";
+  const chips = u.patients.length ? u.patients.map(p =>
+    `<span class="pch${p === u.def ? " def" : ""}"><button type="button" data-pdef="1" data-u="${n}" data-p="${esc(p)}" title="Make default">${p === u.def ? "★" : "☆"} ${esc(p)}</button>` +
+    `<button type="button" class="px" data-pdel="1" data-u="${n}" data-p="${esc(p)}" aria-label="Remove ${esc(p)}">✕</button></span>`).join("")
+    : '<span class="you">No patient assigned</span>';
+  return `<div class="ucard"><div class="utop"><span>👤 ${n} ${badge}</span><span class="uact">${roleBtn}` +
+    (locked ? "" : `<button type="button" class="mini" data-uedit="${n}">✏️ Edit <span class="gu">(સુધારો)</span></button>`) +
+    (self ? '<span class="you">You</span>'
+      : (locked ? "" : `<button type="button" class="mini del" data-user="${n}">🗑️ Delete <span class="gu">(રદ કરો)</span></button>`)) + `</span></div>` +
+    `<div class="upl">Patients <span class="gu">(દર્દીઓ)</span> <small>– tap a name to make it the default ★</small></div>` +
+    `<div class="pchips">${chips}</div>` +
+    `<div class="padd"><input data-pnew="1" maxlength="40" placeholder="New patient name" autocomplete="off"><button type="button" class="mini" data-padd="1" data-u="${n}">➕ Add</button></div></div>`;
+}
+async function refreshSelf(){                         // the admin changed their own patients
+  try{
+    const r = await call("login");
+    if (r.ok){ const keep = curPatient; setPatients(r); if (patients.indexOf(keep) >= 0) curPatient = keep; showPatient(); }
+  }catch(e){}
+}
+$("ulist").addEventListener("click", async e => {
+  const b = e.target.closest("[data-pdef],[data-pdel],[data-padd]");
+  if (!b || !adminPin) return;
+  const u = b.dataset.u, p = b.dataset.p;
+  let action, extra, done;
+  if (b.hasAttribute("data-padd")){
+    const inp = b.closest(".ucard").querySelector("[data-pnew]"), v = inp.value.trim();
+    if (!v){ inp.focus(); return; }
+    action = "addpatient"; extra = { target: u, pname: v }; done = "Patient Added";
+  } else if (b.hasAttribute("data-pdel")){
+    if (!confirm('Remove patient "' + p + '" from ' + u + "?\n\nTheir readings stay in the Google Sheet.")) return;
+    action = "delpatient"; extra = { target: u, pname: p }; done = "Patient Removed";
+  } else {
+    if (b.parentNode.classList.contains("def")) return;
+    action = "setdefault"; extra = { target: u, pname: p }; done = "Default Updated";
+  }
+  b.disabled = true;
+  try{
+    const r = await call(action, Object.assign({ pin: adminPin }, extra));
+    if (r.ok){
+      if (u === session.name) await refreshSelf();
+      await loadUserList();
+      showFlash("ok", done, 1500);
+    } else { b.disabled = false; alert(r.error || "Could not save."); }
+  }catch(err){ b.disabled = false; alert("Could not reach the server. Nothing was changed."); }
+});
+$("ulist").addEventListener("click", async e => {
+  const b = e.target.closest("[data-user]");
+  if (!b || !adminPin) return;
+  const n = b.dataset.user;
+  if (!confirm('Delete user "' + n + '"?\n\nThis cannot be undone.')) return;
+  b.disabled = true;
+  try{
+    const r = await call("deluser", { pin: adminPin, target: n });
+    if (r.ok){ loadUserList(); loadNames(); showFlash("ok", "User Deleted", 1800); }
+    else { alert(r.error || "Could not delete the user."); loadUserList(); }
+  }catch(err){ b.disabled = false; alert("Could not reach the server. Nothing was deleted."); }
+});
+/* Give / remove the Admin 2 role (main admin only) */
+$("ulist").addEventListener("click", async e => {
+  const b = e.target.closest("[data-role]");
+  if (!b || !adminPin) return;
+  const n = b.dataset.role, to = b.dataset.to;
+  const ask = to ? 'Make "' + n + '" an Admin 2?\n\nThey will be able to delete readings, manage users and print every patient.'
+                 : 'Remove Admin 2 from "' + n + '"?';
+  if (!confirm(ask)) return;
+  b.disabled = true;
+  try{
+    const r = await call("setrole", { pin: adminPin, target: n, role: to });
+    if (r.ok){ await loadUserList(); showFlash("ok", to ? "Admin 2 Added" : "Admin 2 Removed", 1500); }
+    else { b.disabled = false; alert(r.error || "Could not change the role."); }
+  }catch(err){ b.disabled = false; alert("Could not reach the server. Nothing was changed."); }
+});
+/* Add a user, or save changes when "Edit" was tapped on a user */
+let editUser = null;
+function endUserEdit(){
+  editUser = null;
+  $("uformTitle").textContent = "➕ Add user"; $("uaddBtn").textContent = "➕ Add user";
+  $("uCancel").classList.add("hide");
+  $("unew").value = ""; $("unpin").value = ""; $("unpin").placeholder = "4 to 8 digit password";
+  $("unpat").value = ""; $("unpatBox").classList.remove("hide");
+  $("e-uadd").style.display = "none";
+}
+$("uCancel").addEventListener("click", endUserEdit);
+$("ulist").addEventListener("click", e => {
+  const b = e.target.closest("[data-uedit]");
+  if (!b || !adminPin) return;
+  editUser = b.dataset.uedit;
+  $("uformTitle").textContent = "✏️ Edit user"; $("uaddBtn").textContent = "💾 Update user";
+  $("uCancel").classList.remove("hide");
+  $("unew").value = editUser; $("unpin").value = (userMap[editUser] && userMap[editUser].pw) || ""; $("unpin").placeholder = "4 to 8 digit password";
+  $("unpatBox").classList.add("hide");
+  $("e-uadd").style.display = "none";
+  $("unew").scrollIntoView({ behavior: "smooth", block: "center" }); $("unew").focus();
+});
+function selfUpdated(newName, newPin){                 // the admin edited their own row
+  session.name = newName;
+  if (newPin){ session.pin = newPin; adminPin = newPin; }
+  try{ if (localStorage.getItem("mr_session")) localStorage.setItem("mr_session", JSON.stringify(session)); }catch(e){}
+  $("who").textContent = session.name;
+  if (!isAdmin()){ $("usersBtn").classList.add("hide"); go("entry"); }
+}
+$("uaddBtn").addEventListener("click", async () => {
+  const n = $("unew").value.trim(), p = $("unpin").value.trim(), err = $("e-uadd"), b = $("uaddBtn");
+  const fail = m => { err.textContent = m; err.style.display = "block"; };
+  err.style.display = "none";
+  if (!adminPin) return;
+  if (!n) return fail("Enter the user's name.");
+
+  if (editUser){
+    if (p && !/^\d{4,8}$/.test(p)) return fail("Password must be 4 to 8 digits.");
+    b.disabled = true;
+    try{
+      const r = await call("updateuser", { pin: adminPin, target: editUser, newname: n, newpin: p });
+      if (r.ok){
+        const wasSelf = editUser === session.name;
+        if (wasSelf) selfUpdated(r.name || n, p);
+        endUserEdit(); loadUserList(); loadNames();
+        showFlash("ok", "User Updated", 1800);
+      } else fail(r.error || "Could not update the user.");
+    }catch(e){ fail("Could not reach the server. Nothing was changed."); }
+    finally{ b.disabled = false; }
+    return;
+  }
+
+  if (!/^\d{4,8}$/.test(p)) return fail("Password must be 4 to 8 digits.");
+  b.disabled = true;
+  try{
+    const r = await call("adduser", { pin: adminPin, newname: n, newpin: p, pname: $("unpat").value.trim() });
+    if (r.ok){ $("unew").value = ""; $("unpin").value = ""; $("unpat").value = ""; loadUserList(); loadNames(); showFlash("ok", "New user added", 1800); }
+    else fail(r.error || "Could not add the user.");
+  }catch(e){ fail("Could not reach the server. Nothing was added."); }
+  finally{ b.disabled = false; }
+});
+
+/* ---------- offline support (needs the page to be opened from its web link) ---------- */
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
+
+/* ---------- start ---------- */
+(async function init(){
+  setNow();
+  loadNames();
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem("mr_session") || "null"); }catch(e){}
+  if (saved && saved.name && saved.pin){
+    const err = await doLogin(saved.name, saved.pin, true);
+    if (err) showLoginError(err);
+  }
+})();
+
+</script>
+</body>
+</html>
