@@ -594,6 +594,7 @@ function enterApp(){
   $("lpin").value = ""; showLoginError("");
   reset(); show("entry");
   showQ(); flushQueue();
+  preloadHistory();
 }
 function logout(msg){
   session = null;
@@ -626,8 +627,10 @@ function handleFail(r, box){
 }
 
 /* ---------- entry form ---------- */
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
 function setNowFor(id){
   const d = new Date();
+  if (id === "date") $("date").max = todayIso();                 // the date picker cannot go past today
   $(id).value = id === "date"
     ? `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
     : `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -819,12 +822,14 @@ async function flushQueue(){
       let r;
       try{ r = await call("submit", Object.assign({ cid: q[0].cid }, q[0].params)); }catch(e){ break; }   // still offline
       if (r.ok){ q.shift(); setQ(q); sent++; continue; }
+      if (/future date/i.test(r.error || "")){ q.shift(); setQ(q); toast("⚠️ A saved entry with a future date was not uploaded and was removed.", false); continue; }
       if (isAuthErr(r.error || "")) logout(r.error);
       break;
     }
   } finally {
     flushing = false;
     if (sent){
+      histPre = null;
       qNotice("✅ " + sent + (sent === 1 ? " saved entry was" : " saved entries were") + " uploaded to Google Sheet");
       if (!$("v-history").classList.contains("hide")) loadHistory();
     } else showQ();
@@ -872,6 +877,9 @@ $("v-entry").addEventListener("submit", async e => {
   const sys = val("sys"), dia = val("dia");
   const bp = (sys || dia) ? `${sys || "-"}/${dia || "-"}` : "";   // e.g. 145/86
   const inj = (document.querySelector('input[name="inj"]:checked') || {}).value || "";
+  // a future date is not accepted
+  const dv = val("date");
+  if (dv !== "-" && dv > todayIso()) return showFlash("warn", "You cannot select a future date.\nPlease choose today or an earlier date.\n(ભવિષ્યની તારીખ પસંદ કરી શકાતી નથી)", 3800);
   // an entry with nothing filled in (only date / time) is not accepted
   const hasData = ["spo2","hr","sys","dia","temp","pre","post","neg","remark"].some(i => ["", "-"].indexOf(val(i)) < 0) || !!inj;
   if (!hasData) return showFlash("warn", "Please enter at least one reading before submitting.\n(ઓછામાં ઓછું એક રીડિંગ દાખલ કરો)", 3500);
@@ -880,6 +888,7 @@ $("v-entry").addEventListener("submit", async e => {
     dls_pre: val("pre"), dls_post: val("post"), dls_neg: val("neg"), dls_inj: inj, remark: val("remark")
   };
   const btn = $("submit"); btn.disabled = true; btn.textContent = "Saving…";
+  histPre = null;                                                // the preloaded History is out of date after a save
   beginUpload();
 
   if (editing){
@@ -975,8 +984,21 @@ function renderHistory(rows){
     `<div class="dhead2">📅 ${esc(d)}</div>` + by[d].sort((a, b) => tm(b) - tm(a)).map(recCard).join("")
   ).join("");
 }
+/* History is fetched in the background right after login, so it opens at once the first time */
+let histPre = null;
+async function preloadHistory(){
+  const pat = curPatient;
+  if (!pat) return;
+  try{
+    const r = await call("history");
+    if (r.ok && pat === curPatient) histPre = { patient: pat, rows: r.rows, t: Date.now() };
+  }catch(e){}
+}
 async function loadHistory(){
   const box = $("hist");
+  const pre = histPre && histPre.patient === curPatient && (Date.now() - histPre.t) < 120000 ? histPre : null;
+  histPre = null;                                                // used once; the Refresh button always reads again
+  if (pre){ renderHistory(pre.rows); return; }
   box.innerHTML = '<div class="empty">Loading…</div>';
   try{
     const r = await call("history");
@@ -996,6 +1018,7 @@ $("hist").addEventListener("click", async e => {
   if (!confirm("Delete the " + (r.time || "-") + " reading of " + r.date + "?\n\nThis cannot be undone.")) return;
   b.disabled = true;
   try{
+    histPre = null;
     const res = await call("delete", { row: r.row, orig_date: r.date, orig_time: r.time });
     if (res.ok) loadHistory();
     else if (isAuthErr(res.error || "")) logout(res.error);
