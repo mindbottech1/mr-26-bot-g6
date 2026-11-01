@@ -71,6 +71,10 @@
   .radios input:focus-visible + .dot{box-shadow:0 0 0 4px rgba(14,165,164,.2)}
   .section{grid-column:1/-1;display:flex;align-items:center;gap:12px;margin-top:4px;color:var(--accent2);font-weight:800;font-size:14px;letter-spacing:1.2px}
   .section::before,.section::after{content:"";flex:1;height:1.5px;background:var(--line)}
+  button.dlsbtn{width:100%;min-height:44px;padding:0;border:0;background:none;cursor:pointer;font-family:inherit;text-align:left}
+  .dlsbtn svg{flex:none;margin-left:-4px;transition:transform .15s}
+  .dlsbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+  #dlsBody{grid-column:1/-1;display:grid;grid-template-columns:inherit;gap:18px}
   #v-login h2,#v-login .sub{text-align:center}
   textarea{resize:vertical;min-height:90px}
   .unit{position:relative}
@@ -369,8 +373,9 @@
       </div>
     </div>
 
-    <div class="section">🏥 DLS</div>
+    <button type="button" class="section dlsbtn" id="dlsToggle" aria-expanded="false" aria-controls="dlsBody"><span>🏥 DLS</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
+    <div id="dlsBody" class="hide">
     <div class="full">
       <div class="pair">
         <div class="pcol">
@@ -396,6 +401,7 @@
         <label class="opt"><input type="radio" name="inj" value="Yes"><span class="dot"></span>Yes <span class="gu">(હા)</span></label>
         <label class="opt"><input type="radio" name="inj" value="No"><span class="dot"></span>No <span class="gu">(ના)</span></label>
       </div>
+    </div>
     </div>
 
     <div class="full">
@@ -716,8 +722,14 @@ function mark(ids, ok, errId){
   $(errId).style.display = ok ? "none" : "block";
   return ok;
 }
+/* DLS section: hidden by default, opened with its bar */
+function setDls(open){
+  $("dlsBody").classList.toggle("hide", !open);
+  $("dlsToggle").setAttribute("aria-expanded", open ? "true" : "false");
+}
+$("dlsToggle").addEventListener("click", () => setDls($("dlsBody").classList.contains("hide")));
 function validate(){
-  return [
+  const res = [
     mark(["spo2"], numOk($("spo2").value, 50, 100), "e-spo2"),
     mark(["hr"],   numOk($("hr").value, 20, 250), "e-hr"),
     mark(["sys","dia"], numOk($("sys").value, 50, 260) && numOk($("dia").value, 30, 160), "e-bp"),
@@ -725,7 +737,9 @@ function validate(){
     mark(["pre"],  numOk($("pre").value, 20, 250), "e-pre"),
     mark(["post"], numOk($("post").value, 20, 250), "e-post"),
     mark(["neg"],  negOk($("neg").value), "e-neg"),
-  ].every(Boolean);
+  ];
+  if (!res[4] || !res[5] || !res[6]) setDls(true);      // an error inside DLS must not stay hidden
+  return res.every(Boolean);
 }
 const val = id => {
   const el = $(id);
@@ -742,6 +756,7 @@ function reset(){
   document.querySelectorAll('input[name="inj"]').forEach(r => r.checked = false);
   document.querySelectorAll("#v-entry .err").forEach(e => e.style.display = "none");
   negManual = false;
+  setDls(false);
   setNow();
 }
 $("cancel").addEventListener("click", () => {
@@ -779,6 +794,7 @@ function startEdit(r){
   negManual = !!dd(r.neg) && !(a !== null && c !== null && String(parseFloat((a - c).toFixed(2))) === dd(r.neg));
   document.querySelectorAll('input[name="inj"]').forEach(x => x.checked = (x.value === r.inj));
   $("remark").value = dd(r.remark);
+  if (dd(r.pre) || dd(r.post) || dd(r.neg) || r.inj === "Yes" || r.inj === "No") setDls(true);   // show DLS when the reading has DLS values
 
   $("editBar").textContent = "✏️ Editing the reading of " + r.date + (r.time ? " (" + fmtT(r.time) + ")" : "") + ". The date cannot be changed.";
   $("editBar").classList.remove("hide");
