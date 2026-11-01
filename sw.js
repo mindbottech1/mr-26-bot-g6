@@ -1,6 +1,6 @@
 // Keeps the page available when the phone is offline. Always tries the internet first, so a new version of
 // the page is picked up as soon as it is uploaded. Google Sheet requests (other site) are never touched.
-const CACHE = "mr-shell-v1";
+const CACHE = "mr-shell-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -14,7 +14,7 @@ self.addEventListener("fetch", e => {
   const r = e.request, u = new URL(r.url);
   if (r.method !== "GET" || u.origin !== self.location.origin) return;
   e.respondWith(
-    fetch(r).then(res => {
+    fetch(r, { cache: "no-cache" }).then(res => {          // always check GitHub for a newer file (skips the 10-minute browser cache)
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(r, copy));
       return res;
