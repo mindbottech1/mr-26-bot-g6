@@ -34,6 +34,9 @@ self.addEventListener("push", e => {
     body: d.body || "",
     icon: "icon-192.png",
     badge: "icon-192.png",
+    vibrate: [200, 100, 200],                                  // sound / vibration helps the phone show a pop-up banner
+    silent: false,
+    timestamp: Date.now(),
     data: { url: d.url || "./" }
   };
   if (d.tag){ opts.tag = d.tag; opts.renotify = true; }      // a new reminder replaces the old one instead of piling up

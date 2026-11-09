@@ -575,15 +575,23 @@ async function registerPush(ask){
     const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, no) => setTimeout(() => no(new Error("sw")), 8000))]);
     const m = await getMessaging();
     const token = await m.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-    if (!token) return false;
+    if (!token){ nErr("no token received from Firebase"); return false; }
     const r = await call("regdevice", { token: token });
-    if (r.ok){ try{ localStorage.setItem("mr_ftoken", token); }catch(e){} }
+    if (!r.ok){ nErr("the server did not accept this phone: " + (r.error || "unknown reply")); return false; }
+    try{ localStorage.setItem("mr_ftoken", token); }catch(e){}
     showNbar();
-    return !!r.ok;
+    return true;
   }catch(e){
-    showNbar();
+    nErr((e && e.message) ? e.message : String(e));
     return false;
   }
+}
+/* Shows what went wrong while turning notifications on, with a "Try again" button */
+function nErr(m){
+  $("nbar").classList.remove("hide");
+  $("ntext").textContent = "⚠️ Notifications could not be set up (નોટિફિકેશન ચાલુ થઈ શક્યા નથી): " + m;
+  $("nbtn").textContent = "Try again";
+  $("nbtn").dataset.mode = "ask";
 }
 /* Small bar under the header: asks to turn notifications on, or explains why they are off */
 function showNbar(){
@@ -593,9 +601,9 @@ function showNbar(){
   if (session && !hidden){
     const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (!pushSupported()){
-      if (ios){ msg = "📲 For notifications on iPhone: tap Share → Add to Home Screen, then open the app from the Home Screen icon."; btn = "OK"; }
+      if (ios){ msg = "📲 For notifications on iPhone: tap Share → Add to Home Screen, then open the app from the Home Screen icon. (iPhone પર નોટિફિકેશન માટે: Share દબાવો → Add to Home Screen, પછી Home Screen આઇકનથી એપ ખોલો.)"; btn = "OK"; }
     } else if (Notification.permission === "default"){ msg = "🔔 Turn on notifications to get alerts. (નોટિફિકેશન ચાલુ કરો)"; btn = "Turn on"; }
-    else if (Notification.permission === "denied"){ msg = "🔕 Notifications are blocked. Allow them for this app in the phone settings."; btn = "OK"; }
+    else if (Notification.permission === "denied"){ msg = "🔕 Notifications are blocked. Allow them for this app in the phone settings. (નોટિફિકેશન બંધ છે. ફોનના સેટિંગ્સમાં આ એપ માટે ચાલુ કરો.)"; btn = "OK"; }
   }
   bar.classList.toggle("hide", !msg);
   $("ntext").textContent = msg;
