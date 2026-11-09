@@ -302,6 +302,7 @@
   </header>
 
   <div class="qbar hide" id="qbar" role="status" aria-live="polite"><span id="qtext"></span><button type="button" class="mini" id="qretry">Retry now</button></div>
+  <div class="qbar hide" id="nbar" role="status"><span id="ntext"></span><button type="button" class="mini" id="nbtn">Turn on</button></div>
 
   <!-- SIGN IN -->
   <section class="pane" id="v-login">
@@ -532,6 +533,86 @@ async function call(action, extra){
   return await res.json();
 }
 
+/* ---------- push notifications (Firebase Cloud Messaging) ---------- */
+/* These values are public by design. The secret service-account key lives only in the Apps Script (Script Properties). */
+const FB_CONFIG = {
+  apiKey: "AIzaSyCaTFnsLTldrZCr_JcojiABqZUaTiKQiMg",
+  authDomain: "mr-notify-f2b2b.firebaseapp.com",
+  projectId: "mr-notify-f2b2b",
+  storageBucket: "mr-notify-f2b2b.firebasestorage.app",
+  messagingSenderId: "675857081253",
+  appId: "1:675857081253:web:3bc479210ec5d9c0a93e4c"
+};
+const VAPID_KEY = "BCneoQH5huGCNBZRNd08uRs2ZwmZMbhlSdh-Yi1RZMdvsg7AgUsKYgfyhqWSlpsjSL8HZ8qh0RmD6eLmA6EUb4g";
+const FB_BASE = "https://www.gstatic.com/firebasejs/10.12.2/";
+const pushSupported = () => /^https?:$/.test(location.protocol) && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const loadJs = src => new Promise((ok, no) => {
+  const s = document.createElement("script");
+  s.src = src; s.onload = ok; s.onerror = () => no(new Error("Could not load " + src));
+  document.head.appendChild(s);
+});
+let fbMsg = null;
+async function getMessaging(){
+  if (fbMsg) return fbMsg;
+  if (typeof firebase === "undefined"){
+    await loadJs(FB_BASE + "firebase-app-compat.js");
+    await loadJs(FB_BASE + "firebase-messaging-compat.js");
+  }
+  if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+  fbMsg = firebase.messaging();
+  return fbMsg;
+}
+/* Gets this phone's notification token and gives it to the Apps Script (Devices tab).
+   ask = true only from a tap on "Turn on" (phones allow the permission box only after a tap). */
+async function registerPush(ask){
+  if (!pushSupported() || !session) return false;
+  try{
+    if (Notification.permission === "default"){
+      if (!ask) return false;
+      await Notification.requestPermission();
+    }
+    if (Notification.permission !== "granted"){ showNbar(); return false; }
+    const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, no) => setTimeout(() => no(new Error("sw")), 8000))]);
+    const m = await getMessaging();
+    const token = await m.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    if (!token) return false;
+    const r = await call("regdevice", { token: token });
+    if (r.ok){ try{ localStorage.setItem("mr_ftoken", token); }catch(e){} }
+    showNbar();
+    return !!r.ok;
+  }catch(e){
+    showNbar();
+    return false;
+  }
+}
+/* Small bar under the header: asks to turn notifications on, or explains why they are off */
+function showNbar(){
+  const bar = $("nbar");
+  let msg = "", btn = "", hidden = false;
+  try{ hidden = !!sessionStorage.getItem("mr_nhide"); }catch(e){}
+  if (session && !hidden){
+    const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!pushSupported()){
+      if (ios){ msg = "📲 For notifications on iPhone: tap Share → Add to Home Screen, then open the app from the Home Screen icon."; btn = "OK"; }
+    } else if (Notification.permission === "default"){ msg = "🔔 Turn on notifications to get alerts. (નોટિફિકેશન ચાલુ કરો)"; btn = "Turn on"; }
+    else if (Notification.permission === "denied"){ msg = "🔕 Notifications are blocked. Allow them for this app in the phone settings."; btn = "OK"; }
+  }
+  bar.classList.toggle("hide", !msg);
+  $("ntext").textContent = msg;
+  $("nbtn").textContent = btn;
+  $("nbtn").dataset.mode = btn === "Turn on" ? "ask" : "hide";
+}
+$("nbtn").addEventListener("click", async () => {
+  if ($("nbtn").dataset.mode === "ask"){
+    $("nbtn").disabled = true;
+    await registerPush(true);
+    $("nbtn").disabled = false;
+  } else {
+    try{ sessionStorage.setItem("mr_nhide", "1"); }catch(e){}
+    showNbar();
+  }
+});
+
 /* ---------- views + menu ---------- */
 function show(name){
   if (name !== "users") adminPin = null;       // Manage User locks again when you leave it
@@ -601,15 +682,19 @@ function enterApp(){
   reset(); show("entry");
   showQ(); flushQueue();
   preloadHistory();
+  showNbar(); registerPush(false);                 // asks nothing here: if permission was already given, the phone is registered again
 }
 function logout(msg){
+  let ftk = null;
+  try{ ftk = localStorage.getItem("mr_ftoken"); localStorage.removeItem("mr_ftoken"); }catch(e){}
+  if (session && ftk) call("unregdevice", { token: ftk }).catch(() => {});   // this phone stops getting notifications for this user
   session = null;
   try{ localStorage.removeItem("mr_session"); }catch(e){}
   $("who").classList.add("hide"); $("menuBtn").style.visibility = "hidden";
   patients = []; curPatient = ""; adminFlag = mainFlag = false;
   $("usersBtn").classList.add("hide"); adminPin = null; $("pnBox").classList.add("hide");
   show("login"); showLoginError(msg || "");
-  clearTimeout(qTimer); qTimer = null; $("qbar").classList.add("hide");
+  clearTimeout(qTimer); qTimer = null; $("qbar").classList.add("hide"); $("nbar").classList.add("hide");
 }
 $("logout").addEventListener("click", () => {
   closeMenu();
