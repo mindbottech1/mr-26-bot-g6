@@ -229,6 +229,40 @@
     .pair .gu{font-size:12px}
   }
 
+  /* monitor (bedside-monitor look) */
+  .mstat{margin:14px 2px 10px;font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mstat .gu{display:inline;margin:0;font-size:13px}
+  .mbadge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.6px;background:#e5f7ee;color:var(--ok)}
+  .mbadge.sel{background:#e8f0f8;color:#1d5fa8}
+  .mon{--u:5px;position:relative;background-color:#08090d;border-radius:16px;padding:calc(var(--u)*2.2) calc(var(--u)*2.6) calc(var(--u)*1.6);color:#fff;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;overflow:hidden;
+    background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:calc(var(--u)*6) calc(var(--u)*6)}
+  .mrow{display:grid;grid-template-columns:minmax(0,1fr) 37%;align-items:center;gap:calc(var(--u)*2);padding:calc(var(--u)*.8) 0}
+  .mwave{position:relative;min-width:0}
+  .mwave canvas{display:block;width:100%;height:calc(var(--u)*13)}
+  .mlbl{display:block;font-weight:700;font-size:max(11px,calc(var(--u)*2.5));letter-spacing:.5px;margin-bottom:2px}
+  .mg{color:#b5e04b}.my{color:#ffc93c}.mw{color:#e8e8ec}
+  .mnum{position:relative;min-width:0}
+  .mnum .k{font-weight:700;font-size:max(11px,calc(var(--u)*2.5));letter-spacing:.5px}
+  .mnum .v{font-weight:800;line-height:1.02;font-size:calc(var(--u)*11.5);white-space:nowrap}
+  .mnum .v.bp{font-size:calc(var(--u)*8.2)}
+  .mnum .v small{font-size:max(11px,calc(var(--u)*2.6));font-weight:700;margin-left:calc(var(--u)*.8);letter-spacing:.4px}
+  .mnum .map{font-size:max(12px,calc(var(--u)*2.8));font-weight:700;color:#aeb4bd;margin-left:8px;letter-spacing:0}
+  .mnum.bad .v{color:#ff5b57}
+  .mnum .flag{font-size:max(10px,calc(var(--u)*2.2));font-weight:800;color:#ff5b57;letter-spacing:.6px;margin-left:6px}
+  .mheart{position:absolute;right:0;top:0;width:calc(var(--u)*4);height:calc(var(--u)*4);min-width:16px;min-height:16px;color:#ff5a72;transform-origin:center}
+  .mheart svg{display:block;width:100%;height:100%}
+  .mfoot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.12);margin-top:calc(var(--u)*1.2);padding-top:calc(var(--u)*1.6);font-size:max(12px,calc(var(--u)*2.7));color:#d6d9df;font-weight:600}
+  .mfoot b{color:#fff}
+  .mfoot .r{text-align:right}
+  .mfoot .sm{display:block;color:#98a0ab;font-weight:500;font-size:max(11px,calc(var(--u)*2.3));margin-top:2px}
+  .mfoot .sm.bad{color:#ff6b67;font-weight:700}
+  .mempty{display:none;padding:calc(var(--u)*6) 0;text-align:center;color:#98a0ab;font-size:max(14px,calc(var(--u)*3))}
+  .mon.empty .mempty{display:block}
+  .mon.empty .mrow,.mon.empty .mfoot{display:none}
+  @media(max-width:520px){.mfoot{display:block}.mfoot .r{text-align:left;margin-top:8px}}
+  .mnote{margin:12px 2px 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .mnote .gu{font-size:12.5px;display:block}
+
   /* larger text so it is easy to read on a mobile */
   header h1{font-size:23px}
   .pn{font-size:14.5px}.pn input{font-size:14.5px}.pn button{font-size:14.5px}
@@ -282,6 +316,7 @@
   <button type="button" data-go="entry">➕ New Entry<span class="gu">(નવી એન્ટ્રી)</span></button>
   <button type="button" data-go="history">📋 History<span class="gu">(હિસ્ટ્રી)</span></button>
   <button type="button" data-go="graph">📈 Graph<span class="gu">(ગ્રાફ)</span></button>
+  <button type="button" data-go="monitor">🖥️ Monitor<span class="gu">(મોનિટર)</span></button>
   <button type="button" data-go="print">🖨️ Print<span class="gu">(પ્રિન્ટ)</span></button>
   <button type="button" data-go="users" id="usersBtn" class="hide">⋮ Manage User<span class="gu">(યુઝર મેનેજ કરો)</span></button>
   <button type="button" class="out" id="logout">🚪 Log out<span class="gu">(લોગ આઉટ)</span></button>
@@ -438,6 +473,48 @@
     <div id="gbox"></div>
   </section>
 
+  <!-- MONITOR -->
+  <section class="pane hide" id="v-monitor">
+    <div class="phead"><h2>🖥️ Monitor <span class="gu">(મોનિટર)</span></h2><button type="button" class="mini" id="mrefresh">🔄 Refresh</button></div>
+    <p class="sub">Shows a reading like a bedside monitor. It opens on the latest reading; pick a date and time to see an earlier one.</p>
+    <label for="mdate">📅 Date <span class="gu">(તારીખ)</span></label>
+    <div class="dnav">
+      <button type="button" class="navb" id="mdprev" aria-label="Previous day">‹</button>
+      <input type="date" id="mdate">
+      <button type="button" class="navb" id="mdnext" aria-label="Next day">›</button>
+    </div>
+    <label for="mtime">⏰ Time <span class="gu">(સમય)</span></label>
+    <div class="dnav">
+      <button type="button" class="navb" id="mtprev" aria-label="Earlier reading">‹</button>
+      <select id="mtime" aria-label="Reading time"></select>
+      <button type="button" class="navb" id="mtnext" aria-label="Later reading">›</button>
+      <button type="button" class="mini" id="mlatest">Latest <span class="gu">(છેલ્લું)</span></button>
+    </div>
+    <div class="mstat" id="mstat"></div>
+    <div class="mon" id="mon">
+      <div class="mrow">
+        <div class="mwave"><span class="mlbl mg">HR</span><canvas id="mc1"></canvas></div>
+        <div class="mnum mg" id="mn-hr"><span class="mheart" id="mheart"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span><div class="k">ECG<span class="flag" id="mf-hr"></span></div><div class="v"><span id="mv-hr">--</span><small>BPM</small></div></div>
+      </div>
+      <div class="mrow">
+        <div class="mwave"><span class="mlbl mg">ST</span><canvas id="mc2"></canvas></div>
+        <div class="mnum mw" id="mn-bp"><div class="k">BP<span class="map" id="mv-map"></span><span class="flag" id="mf-bp"></span></div><div class="v bp"><span id="mv-bp">--/--</span></div></div>
+      </div>
+      <div class="mrow">
+        <div class="mwave"><span class="mlbl my">PLETH</span><canvas id="mc3"></canvas></div>
+        <div class="mnum my" id="mn-sp"><div class="k">SPO2<span class="flag" id="mf-sp"></span></div><div class="v"><span id="mv-sp">--</span><small>%</small></div></div>
+      </div>
+      <div class="mfoot">
+        <div>Health Monitor: <b id="mfp"></b><span class="sm" id="mfx"></span></div>
+        <div class="r"><span id="mfd"></span> &nbsp; <b id="mft"></b><span class="sm" id="mfb"></span></div>
+      </div>
+      <div class="mempty" id="mempty"></div>
+    </div>
+    <div class="mnote">The waves are drawn from the entered readings: the heartbeat sets the ECG speed, the BP gap (Sys. − Dia.) sets the pulse-wave height, and a low SpO2 makes the pulse wave weaker and unsteady and lowers the ST part. This is an illustration, not a live ECG from a device.
+      <span class="gu">(તરંગો દાખલ કરેલા રીડિંગ પરથી દોરેલા છે. ઓછું SpO2 પલ્સ તરંગને નબળું અને અસ્થિર બનાવે છે અને ST ભાગ નીચે લાવે છે. આ કોઈ ઉપકરણનો લાઇવ ECG નથી.)</span></div>
+    <button type="button" class="btn submit" id="msnap">📷 Save picture <span class="gu">(ફોટો સાચવો)</span></button>
+  </section>
+
   <!-- PRINT -->
   <section class="pane hide" id="v-print">
     <div class="phead"><h2>🖨️ Print <span class="gu">(પ્રિન્ટ)</span></h2></div>
@@ -522,6 +599,7 @@ $("pnSel").addEventListener("change", () => {
   if (editing){ reset(); go("history"); return; }                  // an edit belongs to the previous patient
   if (!$("v-history").classList.contains("hide")) loadHistory();   // History / Graph show the chosen patient
   if (!$("v-graph").classList.contains("hide")) openGraph();
+  if (!$("v-monitor").classList.contains("hide")) openMonitor();
 });
 showPatient();
 
@@ -624,7 +702,8 @@ $("nbtn").addEventListener("click", async () => {
 /* ---------- views + menu ---------- */
 function show(name){
   if (name !== "users") adminPin = null;       // Manage User locks again when you leave it
-  ["login","entry","history","graph","print","users"].forEach(v => $("v-" + v).classList.toggle("hide", v !== name));
+  if (name !== "monitor") monStop();           // the monitor only runs while it is on screen
+  ["login","entry","history","graph","monitor","print","users"].forEach(v => $("v-" + v).classList.toggle("hide", v !== name));
   document.querySelectorAll(".drawer [data-go]").forEach(b => b.classList.toggle("active", b.dataset.go === name));
   closeMenu();
 }
@@ -639,6 +718,7 @@ function go(v){
   if (v === "entry" && editing) reset();
   if (v === "history") loadHistory();
   if (v === "graph") openGraph();
+  if (v === "monitor") openMonitor();
   if (v === "print") openPrint();
   if (v === "users") openUsers();
 }
@@ -1335,6 +1415,265 @@ $("gtoday").addEventListener("click", () => {
   $("gdate").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   loadDay();
 });
+
+/* ---------- Monitor: a bedside-monitor style view of one reading ---------- */
+/* The waves are DRAWN from the entered numbers (this is not a live device feed):
+   the heartbeat sets the ECG speed, the BP gap (sys - dia) sets the pulse-wave height. */
+const MON = { hist: [], histDates: {}, dayRows: [], dmy: "", idx: -1, latest: true, req: 0, hr: null, amp: .85, def: 0, raf: 0, last: 0, timer: null, w: 0 };
+const hasVitals = r => numF(r.spo2) !== null || numF(r.hr) !== null || numF(r.temp) !== null || /\d/.test(String(r.bp || ""));
+const rowKey = r => dkey(r.date) + String(tmin(r.time) === null ? 9999 : tmin(r.time)).padStart(4, "0");
+const byTime = (a, b) => rowKey(a) < rowKey(b) ? -1 : rowKey(a) > rowKey(b) ? 1 : 0;
+
+/* --- waveforms --- */
+const C_PS = 200, SPEED = 70, GAP_PX = 14, RPH = 0.30;      // columns per second, sweep speed (px/s), erase bar (px), R-wave position in the beat
+const SW = { cols: 0, head: 0, acc: 0, phase: 0, t: 0, amp: 1, beat: -9e9, refill: false, pn: 0, W: 0, H: 0, dpr: 1, b1: null, b2: null, b3: null };
+const gc = (ph, mu, sg) => { let d = ph - mu; d -= Math.round(d); return Math.exp(-(d * d) / (2 * sg * sg)); };   // bell curve that wraps around the beat
+function ecgVal(ph, hz, lead){
+  const s = 1 / Math.sqrt(Math.max(hz, 1));                    // the waves sit closer together at a fast rate
+  const f = (off, sec, a) => a * gc(ph, RPH + off * hz, Math.max(sec * hz, 0.004));
+  const a = lead ? [.10, -.08, .85, -.32, .36] : [.13, -.12, 1, -.22, .30];
+  const d = lead ? MON.def : 0;                                // low SpO2 shows up in the ST lead
+  return f(-.17 * s, .03, a[0]) + f(-.022, .010, a[1]) + f(0, .014, a[2]) + f(.024, .012, a[3]) + f(.27 * s, .05, a[4] * (1 - .8 * d)) - f(.15 * s, .07, .24 * d);
+}
+function plethVal(ph, hz){
+  const s = 1 / Math.sqrt(Math.max(hz, 1));
+  const g = (off, sec, a) => a * gc(ph, RPH + off * hz, Math.max(sec * hz, 0.01));
+  return (g(.30 * s, .085 * s, 1) + g(.56 * s, .09 * s, .30 * (1 - .8 * MON.def))) / 1.02;
+}
+function monStep(n){
+  const hz = MON.hr ? Math.min(3.7, Math.max(.33, MON.hr / 60)) : 0;
+  for (let k = 0; k < n; k++){
+    const prev = SW.phase;
+    if (hz){
+      SW.phase += hz / C_PS;
+      if (SW.phase >= 1){ SW.phase -= 1; SW.amp = 1 + (Math.random() - .5) * .05; }
+      else if (prev < RPH && SW.phase >= RPH) SW.beat = performance.now();
+    }
+    SW.t += 1 / C_PS;
+    const nz = () => (Math.random() - .5) * .012, w = .02 * Math.sin(6.2832 * .22 * SW.t), i = SW.head;
+    SW.b1[i] = (hz ? ecgVal(SW.phase, hz, 0) * SW.amp : 0) + w + nz();
+    SW.b2[i] = (hz ? ecgVal(SW.phase, hz, 1) * SW.amp : 0) + w * .6 + nz();
+    SW.pn = SW.pn * .85 + (Math.random() - .5) * .16 * MON.def;      // slow wobble that grows as SpO2 falls
+    SW.b3[i] = (hz ? plethVal(SW.phase, hz) * MON.amp : 0) + .03 + nz() * .5 + (hz ? SW.pn + .03 * MON.def * Math.sin(6.2832 * 1.7 * SW.t) : 0);
+    SW.head = (i + 1) % SW.cols;
+  }
+}
+function monInit(W, H, dpr){
+  SW.W = W; SW.H = H; SW.dpr = dpr;
+  SW.cols = Math.max(60, Math.round(W * C_PS / SPEED));
+  ["mc1", "mc2", "mc3"].forEach(id => {
+    const c = $(id); c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+    c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+  });
+  SW.b1 = new Float32Array(SW.cols).fill(NaN); SW.b2 = new Float32Array(SW.cols).fill(NaN); SW.b3 = new Float32Array(SW.cols).fill(NaN);
+  SW.head = 0; SW.acc = 0;
+  monStep(SW.cols);                                           // fill the whole screen at once, like a monitor that is already running
+}
+function monDrawTrace(id, buf, color, lo, hi){
+  const ctx = $(id).getContext("2d"), W = SW.W, H = SW.H, cols = SW.cols, gapC = Math.round(GAP_PX * C_PS / SPEED);
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.strokeStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 5;
+  ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i < cols; i++){
+    const d = (i - SW.head + cols) % cols, v = buf[i];
+    if (i === 0) pen = false;
+    if (d < gapC || v !== v){ pen = false; continue; }          // the erase bar just ahead of the moving point
+    const x = i * SPEED / C_PS, y = H * (0.08 + 0.84 * (1 - (v - lo) / (hi - lo)));
+    if (pen) ctx.lineTo(x, y); else { ctx.moveTo(x, y); pen = true; }
+  }
+  ctx.stroke();
+}
+function monFrame(ts){
+  MON.raf = requestAnimationFrame(monFrame);
+  const dt = MON.last ? Math.min(.1, (ts - MON.last) / 1000) : 0; MON.last = ts;
+  const mon = $("mon"), w = mon.clientWidth;
+  if (w && w !== MON.w){ MON.w = w; mon.style.setProperty("--u", (w / 100) + "px"); }   // every size on the monitor follows its width
+  const c1 = $("mc1"), W = c1.clientWidth, H = c1.clientHeight;
+  if (W < 20 || H < 10) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  if (W !== SW.W || H !== SW.H || dpr !== SW.dpr) monInit(W, H, dpr);
+  if (SW.refill){ SW.refill = false; monStep(SW.cols); }
+  SW.acc += dt * C_PS;
+  const n = Math.min(SW.cols, Math.floor(SW.acc)); SW.acc -= Math.floor(SW.acc);
+  if (n) monStep(n);
+  monDrawTrace("mc1", SW.b1, "#b5e04b", -.42, 1.15);
+  monDrawTrace("mc2", SW.b2, "#b5e04b", -.45, 1.0);
+  monDrawTrace("mc3", SW.b3, "#ffc93c", -.08, 1.1);
+  const since = (performance.now() - SW.beat) / 1000;
+  $("mheart").style.transform = "scale(" + (1 + .35 * Math.exp(-since * 10)).toFixed(3) + ")";   // the heart beats with every ECG spike
+}
+function monStart(){
+  if (!MON.raf){ MON.last = 0; MON.raf = requestAnimationFrame(monFrame); }
+  if (!MON.timer) MON.timer = setInterval(monPoll, 60000);
+}
+function monStop(){
+  if (MON.raf){ cancelAnimationFrame(MON.raf); MON.raf = 0; }
+  if (MON.timer){ clearInterval(MON.timer); MON.timer = null; }
+}
+
+/* --- numbers --- */
+function monShow(r, msg){
+  const mon = $("mon");
+  if (!r){
+    mon.classList.add("empty"); if (MON.hr !== null) SW.refill = true; MON.hr = null;
+    $("mempty").textContent = msg || "No readings with BP, SpO2, heartbeat or temperature on this date. (આ તારીખે કોઈ રીડિંગ નથી.)";
+    return;
+  }
+  mon.classList.remove("empty");
+  const f = flagsOf(r), hr = numF(r.hr), sp = numF(r.spo2), bp = String(r.bp || "").split("/"), sys = numF(bp[0]), dia = numF(bp[1]), tp = numF(r.temp);
+  $("mv-hr").textContent = hr === null ? "--" : Math.round(hr);
+  $("mv-sp").textContent = sp === null ? "--" : String(sp);
+  $("mv-bp").textContent = (sys === null ? "--" : Math.round(sys)) + "/" + (dia === null ? "--" : Math.round(dia));
+  $("mv-map").textContent = sys !== null && dia !== null ? "(" + Math.round(dia + (sys - dia) / 3) + ")" : "";   // mean pressure
+  $("mn-hr").classList.toggle("bad", !!f.hr); $("mn-sp").classList.toggle("bad", !!f.spo2); $("mn-bp").classList.toggle("bad", !!f.bp);
+  $("mf-hr").textContent = !f.hr || hr === null ? "" : hr < LIM.hrLow ? "LOW" : "HIGH";
+  $("mf-sp").textContent = !f.spo2 || sp === null ? "" : "LOW";
+  $("mf-bp").textContent = !f.bp ? "" : ((sys !== null && sys >= LIM.sysHigh) || (dia !== null && dia >= LIM.diaHigh)) ? "HIGH" : "LOW";
+  $("mfp").textContent = "“" + (curPatient || "-") + "”";
+  const fx = $("mfx"); fx.textContent = tp === null ? "" : "Temp " + tp + " °F"; fx.classList.toggle("bad", !!f.temp);
+  $("mfd").textContent = r.date || ""; $("mft").textContent = r.time && r.time !== "-" ? r.time : "";
+  $("mfb").textContent = r.by ? "Entered by " + r.by : "";
+  const hr2 = hr === null ? null : Math.min(250, Math.max(20, hr));
+  if ((hr2 === null) !== (MON.hr === null)) SW.refill = true;
+  MON.hr = hr2;
+  const pp = sys !== null && dia !== null ? sys - dia : 40;
+  MON.def = sp === null ? 0 : Math.min(1, Math.max(0, (LIM.spo2Low - sp) / 14));   // 0 = normal SpO2, 1 = about 80 or lower
+  MON.amp = Math.min(1, Math.max(.4, .35 + pp / 80)) * (1 - .55 * MON.def);          // small BP gap or low SpO2 = smaller pulse wave
+  SW.refill = true;
+}
+function monFillTimes(){
+  const sel = $("mtime"), rows = MON.dayRows;
+  sel.innerHTML = rows.length ? rows.map((r, i) => `<option value="${i}">${esc(r.time && r.time !== "-" ? r.time : "(no time)")}</option>`).join("") : '<option value="">No readings</option>';
+  sel.disabled = !rows.length;
+  $("mtprev").disabled = $("mtnext").disabled = true;
+}
+function monStatus(){
+  $("mstat").innerHTML = MON.latest
+    ? '<span class="mbadge">● LATEST</span> Latest reading · updates every minute <span class="gu">(છેલ્લું રીડિંગ · દર મિનિટે અપડેટ)</span>'
+    : '<span class="mbadge sel">SELECTED</span> Selected reading <span class="gu">(પસંદ કરેલું રીડિંગ)</span>';
+}
+function monDateUI(){
+  const iso = dmy2iso(MON.dmy), mn = $("mdate").min;
+  $("mdate").value = iso;
+  $("mdnext").disabled = iso >= todayIso();
+  $("mdprev").disabled = !isAdmin() && !!mn && iso <= mn;
+}
+function monSelect(i){
+  MON.idx = i;
+  const rows = MON.dayRows;
+  $("mtime").value = String(i);
+  $("mtprev").disabled = i <= 0; $("mtnext").disabled = i >= rows.length - 1;
+  monShow(rows[i]); monStatus();
+}
+
+/* --- loading --- */
+async function monGotoLatest(quiet){
+  const my = ++MON.req, pat = curPatient;
+  if (!pat){ MON.dayRows = []; monFillTimes(); monShow(null, "No patient is assigned to you."); return; }
+  if (!quiet) $("mstat").textContent = "Loading…";
+  let r;
+  try{ r = await call("history"); }
+  catch(e){ if (!quiet) $("mstat").innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; return; }
+  if (my !== MON.req || pat !== curPatient) return;             // the person already picked something else
+  if (!r.ok) return handleFail(r, $("mstat"));
+  MON.histDates = {}; r.rows.forEach(x => { if (x.date) MON.histDates[x.date] = 1; });
+  MON.hist = r.rows.filter(x => x.date && hasVitals(x)).sort(byTime);
+  const ds = Object.keys(MON.histDates).sort((a, b) => dkey(a).localeCompare(dkey(b)));
+  if (!isAdmin() && ds.length) $("mdate").min = dmy2iso(ds[0]); else $("mdate").removeAttribute("min");   // users can only see the last 2 days
+  $("mdate").max = todayIso();
+  MON.latest = true;
+  const last = MON.hist[MON.hist.length - 1];
+  if (!last){
+    MON.dmy = todayDmy(); MON.dayRows = []; monFillTimes(); monDateUI();
+    monShow(null, "No readings yet. (હજુ કોઈ રીડિંગ નથી.)"); monStatus(); return;
+  }
+  MON.dmy = last.date; MON.dayRows = MON.hist.filter(x => x.date === last.date);
+  monFillTimes(); monDateUI(); monSelect(MON.dayRows.length - 1);
+}
+async function monLoadDate(dmy){
+  const my = ++MON.req, pat = curPatient;
+  MON.latest = false; MON.dmy = dmy;
+  let rows = MON.hist.filter(x => x.date === dmy);
+  if (!MON.histDates[dmy] && isAdmin()){                         // older day: only the admin can read it from the sheet
+    $("mstat").textContent = "Loading…";
+    try{
+      const r = await call("day", { date: dmy });
+      if (my !== MON.req || pat !== curPatient) return;
+      if (!r.ok) return handleFail(r, $("mstat"));
+      rows = r.rows.filter(x => hasVitals(x)).map(x => Object.assign({ date: dmy }, x)).sort(byTime);
+    }catch(e){ $("mstat").innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; return; }
+  }
+  MON.dayRows = rows; monFillTimes(); monDateUI();
+  if (rows.length) monSelect(rows.length - 1);
+  else {
+    monShow(null, !isAdmin() && !MON.histDates[dmy] ? "No reading on this date. Users can see only the last 2 days. (યુઝર ફક્ત છેલ્લા 2 દિવસ જોઈ શકે છે.)" : null);
+    monStatus();
+  }
+}
+function monPoll(){ if (document.hidden || !MON.latest || $("v-monitor").classList.contains("hide")) return; monGotoLatest(true); }
+function openMonitor(){ monStart(); monGotoLatest(); }
+
+$("mdate").addEventListener("change", () => { const d = iso2dmy($("mdate").value); if (d) monLoadDate(d); });
+function monShiftDay(n){
+  const b = new Date($("mdate").value + "T00:00:00");
+  if (isNaN(b)) return;
+  b.setDate(b.getDate() + n);
+  const iso = isoOf(b);
+  if (iso > todayIso()) return;
+  monLoadDate(iso2dmy(iso));
+}
+$("mdprev").addEventListener("click", () => monShiftDay(-1));
+$("mdnext").addEventListener("click", () => monShiftDay(1));
+$("mtime").addEventListener("change", () => { const i = parseInt($("mtime").value, 10); if (!isNaN(i)){ MON.latest = false; monSelect(i); } });
+$("mtprev").addEventListener("click", () => { if (MON.idx > 0){ MON.latest = false; monSelect(MON.idx - 1); } });
+$("mtnext").addEventListener("click", () => { if (MON.idx < MON.dayRows.length - 1){ MON.latest = false; monSelect(MON.idx + 1); } });
+$("mlatest").addEventListener("click", () => monGotoLatest());
+$("mrefresh").addEventListener("click", () => { if (MON.latest) monGotoLatest(); else monLoadDate(MON.dmy); });
+
+/* --- save a picture of the monitor (PNG) --- */
+function monSnap(){
+  const mon = $("mon");
+  if (mon.classList.contains("empty")) return;
+  const w = 1000, h = 800, cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const g = cv.getContext("2d"), red = "#ff5b57";
+  g.fillStyle = "#08090d"; g.fillRect(0, 0, w, h);
+  const rows = [
+    ["HR", "#b5e04b", "mc1", "ECG", $("mv-hr").textContent, "BPM", $("mn-hr"), 96, $("mf-hr").textContent],
+    ["ST", "#b5e04b", "mc2", "BP", $("mv-bp").textContent, $("mv-map").textContent, $("mn-bp"), 70, $("mf-bp").textContent],
+    ["PLETH", "#ffc93c", "mc3", "SPO2", $("mv-sp").textContent, "%", $("mn-sp"), 96, $("mf-sp").textContent]];
+  rows.forEach((r, i) => {
+    const y = 30 + i * 190, bad = r[6].classList.contains("bad");
+    g.drawImage($(r[2]), 30, y, 590, 160);
+    g.fillStyle = r[1]; g.font = "700 22px Segoe UI, Arial, sans-serif"; g.textBaseline = "top"; g.fillText(r[0], 34, y + 4);
+    const col = r[3] === "SPO2" ? "#ffc93c" : r[3] === "ECG" ? "#b5e04b" : "#e8e8ec";
+    g.fillStyle = col; g.font = "700 22px Segoe UI, Arial, sans-serif"; g.fillText(r[3], 660, y + 4);
+    g.fillStyle = bad ? red : col; g.font = "800 " + r[7] + "px Segoe UI, Arial, sans-serif"; g.fillText(r[4], 660, y + 36);
+    const vw = g.measureText(r[4]).width;
+    g.fillStyle = r[3] === "BP" ? "#aeb4bd" : col; g.font = "700 26px Segoe UI, Arial, sans-serif"; g.fillText(r[5], 660 + vw + 10, y + 40 + (r[3] === "BP" ? 0 : 50));
+    if (r[8]){ g.fillStyle = red; g.font = "800 20px Segoe UI, Arial, sans-serif"; g.fillText(r[8], 660, y + 138); }
+  });
+  g.fillStyle = "rgba(255,255,255,.15)"; g.fillRect(30, 610, w - 60, 1);
+  g.fillStyle = "#d6d9df"; g.font = "600 26px Segoe UI, Arial, sans-serif"; g.textBaseline = "alphabetic";
+  g.fillText("Health Monitor: " + $("mfp").textContent, 30, 665);
+  g.textAlign = "right"; g.fillStyle = "#fff"; g.fillText($("mfd").textContent + "   " + $("mft").textContent, w - 30, 665);
+  g.textAlign = "left"; g.font = "500 22px Segoe UI, Arial, sans-serif";
+  g.fillStyle = $("mfx").classList.contains("bad") ? red : "#98a0ab"; g.fillText($("mfx").textContent, 30, 705);
+  g.textAlign = "right"; g.fillStyle = "#98a0ab"; g.fillText($("mfb").textContent, w - 30, 705);
+  g.textAlign = "left"; g.fillStyle = "#6f7782"; g.font = "500 18px Segoe UI, Arial, sans-serif";
+  g.fillText("Waves are drawn from the entered readings. Not a live ECG.", 30, 765);
+  const name = ("monitor-" + (curPatient || "patient") + "-" + $("mfd").textContent + "-" + $("mft").textContent).replace(/[^\w\-]+/g, "_") + ".png";
+  cv.toBlob(b => {
+    if (!b) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, "image/png");
+}
+$("msnap").addEventListener("click", monSnap);
 
 /* ---------- Print (A4 PDF of the Google Sheet) ---------- */
 let pdfUrl = null, printInit = false;
