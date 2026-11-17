@@ -310,16 +310,56 @@
   .slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
   .slots label{margin:0;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#f7fafb;cursor:pointer}
   .slots .gu{display:inline;margin:0 0 0 2px;font-size:13px}
-  .tbl{overflow-x:auto;border:1.5px solid var(--line);border-radius:12px;background:#fff}
-  .mtbl{width:100%;border-collapse:collapse;font-size:14px}
-  .mtbl th{background:#e8f4f5;color:var(--accent2);font-size:12.5px;padding:8px 4px;text-align:center;font-weight:800;vertical-align:middle}
-  .mtbl td{padding:9px 4px;border-top:1px solid var(--line);text-align:center;vertical-align:top;word-break:break-word}
+  .tbl{width:100%;overflow-x:visible;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+  .mtbl{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px}
+  .mtbl th{background:#e8f4f5;color:var(--accent2);font-size:12.5px;padding:8px 5px;text-align:center;font-weight:800;vertical-align:middle;overflow-wrap:break-word;word-break:normal}
+  .mtbl.active th:nth-child(1),.mtbl.active td:nth-child(1){width:22%}
+  .mtbl.active th:nth-child(2),.mtbl.active td:nth-child(2){width:8%}
+  .mtbl.active th:nth-child(3),.mtbl.active td:nth-child(3){width:30%}
+  .mtbl.active th:nth-child(4),.mtbl.active td:nth-child(4){width:18%}
+  .mtbl.active th:nth-child(5),.mtbl.active td:nth-child(5){width:22%}
+  .mtbl.manage th:nth-child(1),.mtbl.manage td:nth-child(1){width:19%}
+  .mtbl.manage th:nth-child(2),.mtbl.manage td:nth-child(2){width:8%}
+  .mtbl.manage th:nth-child(3),.mtbl.manage td:nth-child(3){width:27%}
+  .mtbl.manage th:nth-child(4),.mtbl.manage td:nth-child(4){width:16%}
+  .mtbl.manage th:nth-child(5),.mtbl.manage td:nth-child(5){width:18%}
+  .mtbl.manage th:nth-child(6),.mtbl.manage td:nth-child(6){width:12%}
+  .mtbl.removed th:nth-child(1),.mtbl.removed td:nth-child(1){width:18%}
+  .mtbl.removed th:nth-child(2),.mtbl.removed td:nth-child(2){width:7%}
+  .mtbl.removed th:nth-child(3),.mtbl.removed td:nth-child(3){width:23%}
+  .mtbl.removed th:nth-child(4),.mtbl.removed td:nth-child(4){width:14%}
+  .mtbl.removed th:nth-child(5),.mtbl.removed td:nth-child(5){width:15%}
+  .mtbl.removed th:nth-child(6),.mtbl.removed td:nth-child(6){width:13%}
+  .mtbl.removed th:nth-child(7),.mtbl.removed td:nth-child(7){width:10%}
+  .mtbl th .gu{display:block;font-size:11px;font-weight:600;color:var(--muted);line-height:1.25}
+  .mtbl td{padding:9px 5px;border-top:1px solid var(--line);text-align:center;vertical-align:middle;overflow-wrap:anywhere;word-break:normal}
   .mtbl th:first-child,.mtbl td:first-child{text-align:left;padding-left:10px}
-  .mtbl td.mdn b{display:block;font-size:15.5px}
+  .mtbl td.mdn b{display:block;font-size:15.5px;overflow-wrap:anywhere}
   .mtbl td.mdn small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;font-weight:500}
   .mtbl td.mds{font-size:18px;color:var(--ok);font-weight:800;vertical-align:middle}
-  .mtbl .macts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .mtbl .macts{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap}
   .mtbl .macts .mini{padding:5px 10px;font-size:13px}
+  .med-manage{display:flex;justify-content:flex-end;margin-top:10px}
+  .med-icon{width:32px;height:32px;padding:0;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--accent2);font-size:18px;font-weight:700;cursor:pointer}
+  .med-icon.del{color:var(--danger)}
+  .mtbl .when,.mtbl .note,.mtbl .company{text-align:center;min-width:0}
+  .mtbl .when span{display:block;white-space:normal;line-height:1.35}
+  .mtbl .mdn{overflow-wrap:anywhere}
+  @media(max-width:640px){
+    .tbl{overflow:visible}
+    .mtbl,.mtbl tbody{display:block;width:100%}
+    .mtbl thead{display:none}
+    .mtbl tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-top:1px solid var(--line)}
+    .mtbl td,.mtbl th{display:flex;width:auto!important;min-width:0;align-items:center;justify-content:space-between;gap:8px;text-align:right!important;padding:9px 10px;overflow-wrap:anywhere}
+    .mtbl td::before{content:attr(data-label);font-size:12px;font-weight:800;color:var(--accent2);text-align:left;flex:0 0 auto}
+    .mtbl td.mdn{grid-column:1/-1;justify-content:flex-start;text-align:left!important;background:#f8fbfb}
+    .mtbl td.mdn::before{content:attr(data-label)}
+    .mtbl td:nth-child(3){grid-column:1/-1}
+    .mtbl td:last-child{justify-content:flex-end}
+    .mtbl td:last-child::before{margin-right:auto}
+    .mtbl .when span{display:inline-block;text-align:right}
+    .mtbl .macts{justify-content:flex-end}
+  }
   .mleg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 4px 0;font-size:12.5px;color:var(--muted)}
   .mleg .gu{display:inline;margin:0;font-size:12.5px}
 </style>
@@ -561,7 +601,8 @@
     </div>
     <div class="dhead2">✅ Medicines to give <span class="gu">(આપવાની દવાઓ)</span></div>
     <div id="medActive"></div>
-    <div class="dhead2">🗑️ Removed medicines <span class="gu">(કાઢી નાખેલી દવાઓ)</span></div>
+    <div class="med-manage"><button type="button" class="mini hide" id="medManageBtn">Update</button></div>
+    <div class="dhead2">Removed medicines <span class="gu">(કાઢી નાખેલી દવાઓ)</span></div>
     <div id="medRemoved"></div>
   </section>
 
@@ -1771,33 +1812,29 @@ $("medAddBtn").addEventListener("click", () => { if ($("medForm").classList.cont
 $("medCancel").addEventListener("click", endMedEdit);
 
 const dashIf = v => (v == null || String(v).trim() === "" || String(v).trim() === "-") ? "" : String(v).trim();
-function medCell(m){
-  const sub = [dashIf(m.cat), dashIf(m.company)].filter(Boolean).map(esc).join(" · ");
-  return `<b>${esc(m.name)}</b>` + (sub ? `<small>${sub}</small>` : "") + (dashIf(m.note) ? `<small>📝 ${esc(m.note)}</small>` : "");
+let medManageMode = false;
+function medCell(m){ return `<b>${esc(m.name)}</b>`; }
+function medDetails(m){
+  const when = m.slots.map(slot => { const item = SLOTS.find(x => x[0] === slot); return item ? `<span>${esc(item[0])} <b>(${esc(item[2])})</b></span>` : `<span>${esc(slot)}</span>`; }).join("");
+  return `<td data-label="Dose (ડોઝ)">${esc(dashIf(m.dose) || "-")}</td><td class="when" data-label="When to Give (ક્યારે આપવી)">${when || "-"}</td><td class="note" data-label="Note (નોંધ)">${esc(dashIf(m.note) || "-")}</td><td class="company" data-label="Company (કંપની)">${esc(dashIf(m.company) || "-")}</td>`;
+}
+function medActions(m, removed){
+  if (!isAdmin()) return "";
+  if (removed) return `<td data-label="Action"><button type="button" class="mini" data-medact="restore" data-id="${esc(m.id)}">➕</button></td>`;
+  if (!medManageMode) return "";
+  return `<td data-label="Action"><div class="macts"><button type="button" class="med-icon" title="Edit medicine" aria-label="Edit medicine" data-medact="edit" data-id="${esc(m.id)}">✎</button><button type="button" class="med-icon del" title="Remove medicine" aria-label="Remove medicine" data-medact="remove" data-id="${esc(m.id)}">X</button></div></td>`;
 }
 function renderMeds(){
   const adm = isAdmin();
   const act = MEDS.filter(m => m.status !== "Removed"), rem = MEDS.filter(m => m.status === "Removed").reverse();
   const A = $("medActive"), R = $("medRemoved");
   if (!act.length) A.innerHTML = '<div class="empty">No medicines in the list.</div>';
-  else {
-    A.innerHTML = `<div class="tbl"><table class="mtbl"><thead><tr><th>Medicine <span class="gu">(દવા)</span></th><th>Dose</th>` +
-      SLOTS.map(s => `<th title="${s[0]}">${s[1]}</th>`).join("") + `</tr></thead><tbody>` +
-      act.map(m => `<tr><td class="mdn">${medCell(m)}` +
-        (adm ? `<div class="macts"><button type="button" class="mini" data-medact="edit" data-id="${esc(m.id)}">✏️ Edit</button>` +
-               `<button type="button" class="mini del" data-medact="remove" data-id="${esc(m.id)}">🗑️ Remove</button></div>` : "") +
-        `</td><td>${esc(dashIf(m.dose) || "-")}</td>` +
-        SLOTS.map(s => `<td class="mds">${m.slots.indexOf(s[0]) >= 0 ? "✔" : ""}</td>`).join("") + `</tr>`).join("") +
-      `</tbody></table></div><div class="mleg">` +
-      SLOTS.map(s => `<span>${s[1]} ${s[0]} <span class="gu">(${s[2]})</span></span>`).join("") + `</div>`;
-  }
+  else A.innerHTML = `<div class="tbl"><table class="mtbl ${medManageMode && adm ? "manage" : "active"}"><thead><tr><th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th><th>When to Give<span class="gu">(ક્યારે આપવી)</span></th><th>Note<span class="gu">(નોંધ)</span></th><th>Company<span class="gu">(કંપની)</span></th>${medManageMode && adm ? "<th>Action</th>" : ""}</tr></thead><tbody>` +
+    act.map(m => `<tr><td class="mdn" data-label="Medicine (દવા)">${medCell(m)}</td>${medDetails(m)}${medActions(m, false)}</tr>`).join("") + `</tbody></table></div>`;
+  if (adm){ $("medManageBtn").classList.toggle("hide", !act.length); $("medManageBtn").textContent = medManageMode ? "Done" : "Update"; }
   if (!rem.length) R.innerHTML = '<div class="empty">No removed medicines.</div>';
-  else {
-    R.innerHTML = `<div class="tbl"><table class="mtbl"><thead><tr><th>Medicine <span class="gu">(દવા)</span></th><th>Removed on</th></tr></thead><tbody>` +
-      rem.map(m => `<tr><td class="mdn">${medCell(m)}` +
-        (adm ? `<div class="macts"><button type="button" class="mini" data-medact="restore" data-id="${esc(m.id)}">↩️ Add back</button></div>` : "") +
-        `</td><td>${esc(dashIf(m.removed) || "-")}</td></tr>`).join("") + `</tbody></table></div>`;
-  }
+  else R.innerHTML = `<div class="tbl"><table class="mtbl removed"><thead><tr><th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th><th>When to Give<span class="gu">(ક્યારે આપવી)</span></th><th>Note<span class="gu">(નોંધ)</span></th><th>Company<span class="gu">(કંપની)</span></th><th>Removed on</th>${adm ? "<th>Action</th>" : ""}</tr></thead><tbody>` +
+    rem.map(m => `<tr><td class="mdn" data-label="Medicine (દવા)">${medCell(m)}</td>${medDetails(m)}<td data-label="Removed on">${esc(dashIf(m.removed) || "-")}</td>${medActions(m, true)}</tr>`).join("") + `</tbody></table></div>`;
 }
 async function loadMeds(){
   const adm = isAdmin(), A = $("medActive");
@@ -1805,6 +1842,7 @@ async function loadMeds(){
   $("medsub").textContent = adm ? "Add, edit, schedule or remove medicines. Users can only view this list."
                                 : "These are the medicines to give through the day. Only the admin can change the list.";
   endMedEdit();
+  medManageMode = false;
   A.innerHTML = '<div class="empty">Loading…</div>'; $("medRemoved").innerHTML = "";
   try{
     const r = await call("medlist");
@@ -1814,6 +1852,7 @@ async function loadMeds(){
   }catch(e){ A.innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; }
 }
 $("medrefresh").addEventListener("click", loadMeds);
+$("medManageBtn").addEventListener("click", () => { medManageMode = !medManageMode; renderMeds(); });
 
 $("medSave").addEventListener("click", async () => {
   if (!isAdmin()) return;
