@@ -305,6 +305,23 @@
     .pair label{font-size:12.5px}
     .pair .gu{font-size:13.5px}
   }
+
+  /* medicines page */
+  .slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .slots label{margin:0;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#f7fafb;cursor:pointer}
+  .slots .gu{display:inline;margin:0 0 0 2px;font-size:13px}
+  .tbl{overflow-x:auto;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+  .mtbl{width:100%;border-collapse:collapse;font-size:14px}
+  .mtbl th{background:#e8f4f5;color:var(--accent2);font-size:12.5px;padding:8px 4px;text-align:center;font-weight:800;vertical-align:middle}
+  .mtbl td{padding:9px 4px;border-top:1px solid var(--line);text-align:center;vertical-align:top;word-break:break-word}
+  .mtbl th:first-child,.mtbl td:first-child{text-align:left;padding-left:10px}
+  .mtbl td.mdn b{display:block;font-size:15.5px}
+  .mtbl td.mdn small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;font-weight:500}
+  .mtbl td.mds{font-size:18px;color:var(--ok);font-weight:800;vertical-align:middle}
+  .mtbl .macts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .mtbl .macts .mini{padding:5px 10px;font-size:13px}
+  .mleg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 4px 0;font-size:12.5px;color:var(--muted)}
+  .mleg .gu{display:inline;margin:0;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -317,6 +334,7 @@
   <button type="button" data-go="history">📋 History<span class="gu">(હિસ્ટ્રી)</span></button>
   <button type="button" data-go="graph">📈 Graph<span class="gu">(ગ્રાફ)</span></button>
   <button type="button" data-go="monitor">🖥️ Monitor<span class="gu">(મોનિટર)</span></button>
+  <button type="button" data-go="meds">💊 Medicines<span class="gu">(દવાઓ)</span></button>
   <button type="button" data-go="print">🖨️ Print<span class="gu">(પ્રિન્ટ)</span></button>
   <button type="button" data-go="users" id="usersBtn" class="hide">⋮ Manage User<span class="gu">(યુઝર મેનેજ કરો)</span></button>
   <button type="button" class="out" id="logout">🚪 Log out<span class="gu">(લોગ આઉટ)</span></button>
@@ -515,6 +533,38 @@
     <button type="button" class="btn submit" id="msnap">📷 Save picture <span class="gu">(ફોટો સાચવો)</span></button>
   </section>
 
+  <!-- MEDICINES (everyone can view; only the admin can add / edit / schedule / remove) -->
+  <section class="pane hide" id="v-meds">
+    <div class="phead"><h2>💊 Medicines <span class="gu">(દવાઓ)</span></h2><button type="button" class="mini" id="medrefresh">🔄 Refresh</button></div>
+    <p class="sub" id="medsub"></p>
+    <div id="medAdmin" class="hide">
+      <button type="button" class="section dlsbtn" id="medAddBtn" aria-expanded="false" aria-controls="medForm"><span>➕ ADD MEDICINE <span class="gu">(દવા ઉમેરો)</span></span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div id="medForm" class="hide">
+        <div class="dhead2" id="medFormTitle">➕ Add medicine</div>
+        <label for="mname">💊 Medicine name <span class="gu">(દવાનું નામ)</span></label>
+        <input id="mname" maxlength="60" autocomplete="off" placeholder="e.g. Paracetamol 500">
+        <label for="mcat">🗂️ Category <span class="gu">(પ્રકાર)</span></label>
+        <select id="mcat"></select>
+        <input id="mcatnew" class="hide" maxlength="20" autocomplete="off" placeholder="New category name" style="margin-top:8px">
+        <label for="mcomp">🏭 Company <small>(optional)</small> <span class="gu">(કંપની)</span></label>
+        <input id="mcomp" maxlength="60" autocomplete="off" placeholder="e.g. Cipla">
+        <label for="mdose">💧 Dose <small>(optional)</small> <span class="gu">(માત્રા)</span></label>
+        <input id="mdose" maxlength="40" autocomplete="off" placeholder="e.g. 1 tablet, 5 ml">
+        <label>⏰ When to give <span class="gu">(ક્યારે આપવી)</span></label>
+        <div class="slots" id="mslots"></div>
+        <label for="mnote">📝 Note <small>(optional)</small> <span class="gu">(નોંધ)</span></label>
+        <input id="mnote" maxlength="200" autocomplete="off" placeholder="e.g. after food">
+        <div class="err" id="e-med"></div>
+        <button type="button" class="btn submit" id="medSave">➕ Add medicine</button>
+        <button type="button" class="btn cancel" id="medCancel">✖ Cancel</button>
+      </div>
+    </div>
+    <div class="dhead2">✅ Medicines to give <span class="gu">(આપવાની દવાઓ)</span></div>
+    <div id="medActive"></div>
+    <div class="dhead2">🗑️ Removed medicines <span class="gu">(કાઢી નાખેલી દવાઓ)</span></div>
+    <div id="medRemoved"></div>
+  </section>
+
   <!-- PRINT -->
   <section class="pane hide" id="v-print">
     <div class="phead"><h2>🖨️ Print <span class="gu">(પ્રિન્ટ)</span></h2></div>
@@ -600,6 +650,7 @@ $("pnSel").addEventListener("change", () => {
   if (!$("v-history").classList.contains("hide")) loadHistory();   // History / Graph show the chosen patient
   if (!$("v-graph").classList.contains("hide")) openGraph();
   if (!$("v-monitor").classList.contains("hide")) openMonitor();
+  if (!$("v-meds").classList.contains("hide")) loadMeds();         // the medicine list belongs to the chosen patient
 });
 showPatient();
 
@@ -703,7 +754,7 @@ $("nbtn").addEventListener("click", async () => {
 function show(name){
   if (name !== "users") adminPin = null;       // Manage User locks again when you leave it
   if (name !== "monitor") monStop();           // the monitor only runs while it is on screen
-  ["login","entry","history","graph","monitor","print","users"].forEach(v => $("v-" + v).classList.toggle("hide", v !== name));
+  ["login","entry","history","graph","monitor","meds","print","users"].forEach(v => $("v-" + v).classList.toggle("hide", v !== name));
   document.querySelectorAll(".drawer [data-go]").forEach(b => b.classList.toggle("active", b.dataset.go === name));
   closeMenu();
 }
@@ -719,6 +770,7 @@ function go(v){
   if (v === "history") loadHistory();
   if (v === "graph") openGraph();
   if (v === "monitor") openMonitor();
+  if (v === "meds") loadMeds();
   if (v === "print") openPrint();
   if (v === "users") openUsers();
 }
@@ -1674,6 +1726,134 @@ function monSnap(){
   }, "image/png");
 }
 $("msnap").addEventListener("click", monSnap);
+
+/* ---------- Medicines (everyone can view; only the admin can add / edit / schedule / remove) ---------- */
+const SLOTS = [["Morning", "☀️", "સવાર"], ["Afternoon", "🌤️", "બપોર"], ["Evening", "🌆", "સાંજ"], ["Night", "🌙", "રાત"]];
+const DEF_CATS = ["Tablet", "Syrup", "Tube", "Powder", "Drop"];
+let MEDS = [], MCATS = DEF_CATS.slice(), medEdit = null;
+$("mslots").innerHTML = SLOTS.map(s =>
+  `<label class="chk"><input type="checkbox" value="${s[0]}"> ${s[1]} ${s[0]} <span class="gu">(${s[2]})</span></label>`).join("");
+
+function fillCats(selected){
+  $("mcat").innerHTML = MCATS.map(c => `<option>${esc(c)}</option>`).join("") + '<option value="__new">➕ Add new category…</option>';
+  $("mcat").value = MCATS.indexOf(selected) >= 0 ? selected : MCATS[0];
+  $("mcatnew").classList.add("hide"); $("mcatnew").value = "";
+}
+$("mcat").addEventListener("change", () => {
+  const nw = $("mcat").value === "__new";
+  $("mcatnew").classList.toggle("hide", !nw);
+  if (nw) $("mcatnew").focus();
+});
+/* Add-medicine section: hidden by default, opened with its bar (same as DLS) */
+function setMed(open){
+  $("medForm").classList.toggle("hide", !open);
+  $("medAddBtn").setAttribute("aria-expanded", open ? "true" : "false");
+}
+function openMedForm(m){
+  medEdit = m ? m.id : null;
+  $("medFormTitle").textContent = m ? "✏️ Edit medicine" : "➕ Add medicine";
+  $("medSave").textContent = m ? "💾 Save changes" : "➕ Add medicine";
+  $("mname").value = m ? m.name : "";
+  fillCats(m ? m.cat : MCATS[0]);
+  $("mcomp").value = m && m.company !== "-" ? m.company : "";
+  $("mdose").value = m && m.dose !== "-" ? m.dose : "";
+  $("mnote").value = m && m.note !== "-" ? m.note : "";
+  document.querySelectorAll("#mslots input").forEach(c => { c.checked = !!m && m.slots.indexOf(c.value) >= 0; });
+  $("e-med").style.display = "none";
+  setMed(true);
+  if (m){ $("mname").scrollIntoView({ behavior: "smooth", block: "center" }); $("mname").focus(); }
+}
+function endMedEdit(){
+  medEdit = null;
+  setMed(false);
+}
+$("medAddBtn").addEventListener("click", () => { if ($("medForm").classList.contains("hide")) openMedForm(null); else endMedEdit(); });
+$("medCancel").addEventListener("click", endMedEdit);
+
+const dashIf = v => (v == null || String(v).trim() === "" || String(v).trim() === "-") ? "" : String(v).trim();
+function medCell(m){
+  const sub = [dashIf(m.cat), dashIf(m.company)].filter(Boolean).map(esc).join(" · ");
+  return `<b>${esc(m.name)}</b>` + (sub ? `<small>${sub}</small>` : "") + (dashIf(m.note) ? `<small>📝 ${esc(m.note)}</small>` : "");
+}
+function renderMeds(){
+  const adm = isAdmin();
+  const act = MEDS.filter(m => m.status !== "Removed"), rem = MEDS.filter(m => m.status === "Removed").reverse();
+  const A = $("medActive"), R = $("medRemoved");
+  if (!act.length) A.innerHTML = '<div class="empty">No medicines in the list.</div>';
+  else {
+    A.innerHTML = `<div class="tbl"><table class="mtbl"><thead><tr><th>Medicine <span class="gu">(દવા)</span></th><th>Dose</th>` +
+      SLOTS.map(s => `<th title="${s[0]}">${s[1]}</th>`).join("") + `</tr></thead><tbody>` +
+      act.map(m => `<tr><td class="mdn">${medCell(m)}` +
+        (adm ? `<div class="macts"><button type="button" class="mini" data-medact="edit" data-id="${esc(m.id)}">✏️ Edit</button>` +
+               `<button type="button" class="mini del" data-medact="remove" data-id="${esc(m.id)}">🗑️ Remove</button></div>` : "") +
+        `</td><td>${esc(dashIf(m.dose) || "-")}</td>` +
+        SLOTS.map(s => `<td class="mds">${m.slots.indexOf(s[0]) >= 0 ? "✔" : ""}</td>`).join("") + `</tr>`).join("") +
+      `</tbody></table></div><div class="mleg">` +
+      SLOTS.map(s => `<span>${s[1]} ${s[0]} <span class="gu">(${s[2]})</span></span>`).join("") + `</div>`;
+  }
+  if (!rem.length) R.innerHTML = '<div class="empty">No removed medicines.</div>';
+  else {
+    R.innerHTML = `<div class="tbl"><table class="mtbl"><thead><tr><th>Medicine <span class="gu">(દવા)</span></th><th>Removed on</th></tr></thead><tbody>` +
+      rem.map(m => `<tr><td class="mdn">${medCell(m)}` +
+        (adm ? `<div class="macts"><button type="button" class="mini" data-medact="restore" data-id="${esc(m.id)}">↩️ Add back</button></div>` : "") +
+        `</td><td>${esc(dashIf(m.removed) || "-")}</td></tr>`).join("") + `</tbody></table></div>`;
+  }
+}
+async function loadMeds(){
+  const adm = isAdmin(), A = $("medActive");
+  $("medAdmin").classList.toggle("hide", !adm);
+  $("medsub").textContent = adm ? "Add, edit, schedule or remove medicines. Users can only view this list."
+                                : "These are the medicines to give through the day. Only the admin can change the list.";
+  endMedEdit();
+  A.innerHTML = '<div class="empty">Loading…</div>'; $("medRemoved").innerHTML = "";
+  try{
+    const r = await call("medlist");
+    if (!r.ok) return handleFail(r, A);
+    MEDS = r.meds || []; MCATS = (r.cats && r.cats.length) ? r.cats : DEF_CATS.slice();
+    renderMeds();
+  }catch(e){ A.innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; }
+}
+$("medrefresh").addEventListener("click", loadMeds);
+
+$("medSave").addEventListener("click", async () => {
+  if (!isAdmin()) return;
+  const err = $("e-med"), btn = $("medSave");
+  const fail = m => { err.textContent = m; err.style.display = "block"; };
+  err.style.display = "none";
+  const name = $("mname").value.trim();
+  const cat = $("mcat").value === "__new" ? $("mcatnew").value.trim() : $("mcat").value;
+  const slots = [].filter.call(document.querySelectorAll("#mslots input"), c => c.checked).map(c => c.value);
+  if (!name) return fail("Enter the medicine name.");
+  if (!cat) return fail("Select or enter a category.");
+  if (cat.indexOf(",") >= 0) return fail("Category name cannot contain a comma.");
+  if (!slots.length) return fail("Select at least one time of day.");
+  if (!curPatient) return fail("No patient is assigned to you.");
+  btn.disabled = true;
+  try{
+    const r = await call(medEdit ? "medupdate" : "medadd", {
+      medid: medEdit || "", medname: name, medcat: cat, medcompany: $("mcomp").value.trim(),
+      meddose: $("mdose").value.trim(), medslots: slots.join(","), mednote: $("mnote").value.trim() });
+    if (r.ok){ showFlash("ok", "Medicine Saved", 1500); await loadMeds(); }
+    else if (isAuthErr(r.error || "")) logout(r.error);
+    else fail(r.error || "Could not save.");
+  }catch(e){ fail("Could not reach the server. Nothing was saved."); }
+  finally{ btn.disabled = false; }
+});
+$("v-meds").addEventListener("click", async e => {
+  const b = e.target.closest("[data-medact]");
+  if (!b || !isAdmin()) return;
+  const m = MEDS.filter(x => x.id === b.dataset.id)[0], a = b.dataset.medact;
+  if (!m) return;
+  if (a === "edit") return openMedForm(m);
+  if (a === "remove" && !confirm('Remove "' + m.name + '" from the list?\n\nIt will move to "Removed medicines" and can be added back.')) return;
+  b.disabled = true;
+  try{
+    const r = await call(a === "remove" ? "medremove" : "medrestore", { medid: m.id });
+    if (r.ok){ showFlash("ok", a === "remove" ? "Medicine Removed" : "Medicine Added Back", 1500); loadMeds(); }
+    else if (isAuthErr(r.error || "")) logout(r.error);
+    else { b.disabled = false; alert(r.error || "Could not save."); }
+  }catch(err){ b.disabled = false; alert("Could not reach the server. Nothing was changed."); }
+});
 
 /* ---------- Print (A4 PDF of the Google Sheet) ---------- */
 let pdfUrl = null, printInit = false;
