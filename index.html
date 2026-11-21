@@ -345,21 +345,29 @@
   .mtbl .when,.mtbl .note,.mtbl .company{text-align:center;min-width:0}
   .mtbl .when span{display:block;white-space:normal;line-height:1.35}
   .mtbl .mdn{overflow-wrap:anywhere}
-  @media(max-width:640px){
-    .tbl{overflow:visible}
-    .mtbl,.mtbl tbody{display:block;width:100%}
-    .mtbl thead{display:none}
-    .mtbl tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-top:1px solid var(--line)}
-    .mtbl td,.mtbl th{display:flex;width:auto!important;min-width:0;align-items:center;justify-content:space-between;gap:8px;text-align:right!important;padding:9px 10px;overflow-wrap:anywhere}
-    .mtbl td::before{content:attr(data-label);font-size:12px;font-weight:800;color:var(--accent2);text-align:left;flex:0 0 auto}
-    .mtbl td.mdn{grid-column:1/-1;justify-content:flex-start;text-align:left!important;background:#f8fbfb}
-    .mtbl td.mdn::before{content:attr(data-label)}
-    .mtbl td:nth-child(3){grid-column:1/-1}
-    .mtbl td:last-child{justify-content:flex-end}
-    .mtbl td:last-child::before{margin-right:auto}
-    .mtbl .when span{display:inline-block;text-align:right}
-    .mtbl .macts{justify-content:flex-end}
-  }
+  .mtbl td.note{font-weight:800}
+  .mtbl .when .gt{display:block;font-style:normal;font-size:11px;color:var(--muted);font-weight:500}
+  .mob{display:none}
+  @media(max-width:640px){.desk{display:none}.mob{display:block}}
+  .mt2{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
+  .mt2 th{background:#e8f4f5;color:var(--accent2);font-weight:800;font-size:10.5px;padding:6px 1px;text-align:center;line-height:1.25;overflow-wrap:anywhere;vertical-align:middle}
+  .mt2 th .gu{display:block;font-size:10px;font-weight:600;color:var(--muted)}
+  .mt2 td{padding:8px 2px;border-top:1px solid var(--line);text-align:center;vertical-align:middle}
+  .mt2 th:first-child,.mt2 td:first-child{text-align:left;padding-left:8px}
+  .mt2 .mdn b.nm{display:block;font-size:14px;overflow-wrap:anywhere}
+  .mt2 small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:500;overflow-wrap:anywhere}
+  .mt2 small b{color:var(--ink);font-weight:800}
+  .mt2 .ck{color:var(--ok);font-size:16px;font-weight:800}
+  .mt2 .ck small{font-size:10px;color:var(--ink);font-weight:600;white-space:nowrap;margin-top:0}
+  .mt2 .no{color:var(--muted)}
+  .mt2 .macts{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+  .mt2 .macts .med-icon{width:28px;height:28px;font-size:16px}
+  .mt2 .mini{padding:3px 6px}
+  /* add-medicine: time for each ticked slot */
+  .slotbox{border:1.5px solid var(--line);border-radius:12px;background:#f7fafb;min-width:0}
+  .slotbox label{border:0!important;background:none!important;border-radius:12px}
+  .stime{display:flex;gap:4px;padding:0 8px 10px}
+  .stime select{flex:1;min-width:0;padding:8px 2px;font-size:15px;text-align:center;text-align-last:center;-webkit-appearance:none;appearance:none;background-image:none}
   .mleg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 4px 0;font-size:12.5px;color:var(--muted)}
   .mleg .gu{display:inline;margin:0;font-size:12.5px}
 </style>
@@ -1772,8 +1780,39 @@ $("msnap").addEventListener("click", monSnap);
 const SLOTS = [["Morning", "☀️", "સવાર"], ["Afternoon", "🌤️", "બપોર"], ["Evening", "🌆", "સાંજ"], ["Night", "🌙", "રાત"]];
 const DEF_CATS = ["Tablet", "Syrup", "Tube", "Powder", "Drop"];
 let MEDS = [], MCATS = DEF_CATS.slice(), medEdit = null;
+const SLOT_DEF = { Morning: "08:00", Afternoon: "13:00", Evening: "18:00", Night: "21:00" };
+const GU_P = { Morning: "સવારે", Afternoon: "બપોરે", Evening: "સાંજે", Night: "રાત્રે" };
+const toGu = v => String(v).replace(/\d/g, d => "૦૧૨૩૪૫૬૭૮૯"[d]);
+function fmt12(t){ const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""); if (!m) return ""; const h = +m[1]; return (h % 12 || 12) + ":" + m[2] + " " + (h >= 12 ? "PM" : "AM"); }
+function guTime(slot, t){ const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""); if (!m || !GU_P[slot]) return ""; const h = (+m[1]) % 12 || 12; return GU_P[slot] + " " + toGu(h + (m[2] === "00" ? "" : ":" + m[2])) + " વાગ્યે"; }
+const HOUR_OPTS = '<option value="">--</option>' + Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${pad(i + 1)}</option>`).join("");
+const MIN_OPTS = Array.from({length: 60}, (_, i) => `<option value="${pad(i)}">${pad(i)}</option>`).join("");
 $("mslots").innerHTML = SLOTS.map(s =>
-  `<label class="chk"><input type="checkbox" value="${s[0]}"> ${s[1]} ${s[0]} <span class="gu">(${s[2]})</span></label>`).join("");
+  `<div class="slotbox" data-slot="${s[0]}"><label class="chk"><input type="checkbox" value="${s[0]}"> ${s[1]} ${s[0]} <span class="gu">(${s[2]})</span></label>` +
+  `<div class="stime hide"><select class="sth" aria-label="${s[0]} hour">${HOUR_OPTS}</select><select class="stm" aria-label="${s[0]} minute">${MIN_OPTS}</select><select class="stp" aria-label="${s[0]} AM or PM"><option>AM</option><option>PM</option></select></div></div>`).join("");
+function setSlotTime(box, t){
+  const m = /^(\d{1,2}):(\d{2})$/.exec(t || ""), h = box.querySelector(".sth"), mi = box.querySelector(".stm"), ap = box.querySelector(".stp");
+  if (m){ const H = +m[1]; h.value = String(H % 12 || 12); mi.value = m[2]; ap.value = H >= 12 ? "PM" : "AM"; }
+  else { h.value = ""; mi.value = "00"; ap.value = "AM"; }
+}
+function getSlotTime(box){
+  const h = box.querySelector(".sth").value; if (!h) return "";
+  let H = (+h) % 12; if (box.querySelector(".stp").value === "PM") H += 12;
+  return pad(H) + ":" + box.querySelector(".stm").value;
+}
+function showSlotTime(box){ box.querySelector(".stime").classList.toggle("hide", !box.querySelector("input").checked); }
+$("mslots").addEventListener("change", e => {
+  if (e.target.type !== "checkbox") return;
+  const box = e.target.closest(".slotbox");
+  if (e.target.checked && !getSlotTime(box)) setSlotTime(box, SLOT_DEF[box.dataset.slot]);
+  showSlotTime(box);
+});
+function normMeds(){
+  MEDS.forEach(m => {
+    m.times = {};
+    m.slots = (m.slots || []).map(x => { const p = String(x).split("@"); if (p[1]) m.times[p[0]] = p[1]; return p[0]; });
+  });
+}
 
 function fillCats(selected){
   $("mcat").innerHTML = MCATS.map(c => `<option>${esc(c)}</option>`).join("") + '<option value="__new">➕ Add new category…</option>';
@@ -1799,7 +1838,12 @@ function openMedForm(m){
   $("mcomp").value = m && m.company !== "-" ? m.company : "";
   $("mdose").value = m && m.dose !== "-" ? m.dose : "";
   $("mnote").value = m && m.note !== "-" ? m.note : "";
-  document.querySelectorAll("#mslots input").forEach(c => { c.checked = !!m && m.slots.indexOf(c.value) >= 0; });
+  document.querySelectorAll("#mslots .slotbox").forEach(box => {
+    const c = box.querySelector("input"), n = box.dataset.slot;
+    c.checked = !!m && m.slots.indexOf(n) >= 0;
+    setSlotTime(box, m && m.times ? m.times[n] : "");
+    showSlotTime(box);
+  });
   $("e-med").style.display = "none";
   setMed(true);
   if (m){ $("mname").scrollIntoView({ behavior: "smooth", block: "center" }); $("mname").focus(); }
@@ -1815,7 +1859,12 @@ const dashIf = v => (v == null || String(v).trim() === "" || String(v).trim() ==
 let medManageMode = false;
 function medCell(m){ return `<b>${esc(m.name)}</b>`; }
 function medDetails(m){
-  const when = m.slots.map(slot => { const item = SLOTS.find(x => x[0] === slot); return item ? `<span>${esc(item[0])} <b>(${esc(item[2])})</b></span>` : `<span>${esc(slot)}</span>`; }).join("");
+  const when = m.slots.map(slot => {
+    const item = SLOTS.find(x => x[0] === slot), t = m.times && m.times[slot];
+    if (!item) return `<span>${esc(slot)}</span>`;
+    return t ? `<span>${esc(item[0])} <b>(${esc(fmt12(t))})</b><i class="gt">(${esc(guTime(slot, t))})</i></span>`
+             : `<span>${esc(item[0])} <b>(${esc(item[2])})</b></span>`;
+  }).join("");
   return `<td data-label="Dose (ડોઝ)">${esc(dashIf(m.dose) || "-")}</td><td class="when" data-label="When to Give (ક્યારે આપવી)">${when || "-"}</td><td class="note" data-label="Note (નોંધ)">${esc(dashIf(m.note) || "-")}</td><td class="company" data-label="Company (કંપની)">${esc(dashIf(m.company) || "-")}</td>`;
 }
 function medActions(m, removed){
@@ -1824,17 +1873,34 @@ function medActions(m, removed){
   if (!medManageMode) return "";
   return `<td data-label="Action"><div class="macts"><button type="button" class="med-icon" title="Edit medicine" aria-label="Edit medicine" data-medact="edit" data-id="${esc(m.id)}">✎</button><button type="button" class="med-icon del" title="Remove medicine" aria-label="Remove medicine" data-medact="remove" data-id="${esc(m.id)}">X</button></div></td>`;
 }
+const MOB_SLOTS = [["Morning","Morning","સવાર"],["Afternoon","Noon","બપોર"],["Evening","Evening","સાંજ"],["Night","Night","રાત"]];
+function medMobTable(list, removed, adm){
+  const act = removed ? adm : (medManageMode && adm);
+  const w = act ? (removed ? [27,9,13,13,13,13,12] : [24,8,12,12,12,12,20]) : [30,10,15,15,15,15];
+  const head = '<th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th>' +
+    MOB_SLOTS.map(x => `<th>${x[1]}<span class="gu">(${x[2]})</span></th>`).join("") + (act ? "<th></th>" : "");
+  const rows = list.map(m => {
+    const sub = [];
+    if (dashIf(m.company)) sub.push(esc(m.company));
+    if (dashIf(m.note)) sub.push(`<b>${esc(m.note)}</b>`);
+    const rem = removed && dashIf(m.removed) ? `<small>Removed ${esc(m.removed)}</small>` : "";
+    const ticks = MOB_SLOTS.map(x => m.slots.indexOf(x[0]) >= 0
+      ? `<td class="ck">✓${m.times && m.times[x[0]] ? `<small>${esc(fmt12(m.times[x[0]]))}</small>` : ""}</td>` : '<td class="no">–</td>').join("");
+    return `<tr><td class="mdn"><b class="nm">${esc(m.name)}</b>${sub.length ? `<small>${sub.join(" · ")}</small>` : ""}${rem}</td><td>${esc(dashIf(m.dose) || "-")}</td>${ticks}${medActions(m, removed)}</tr>`;
+  }).join("");
+  return `<div class="tbl mob"><table class="mt2"><colgroup>${w.map(x => `<col style="width:${x}%">`).join("")}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
 function renderMeds(){
   const adm = isAdmin();
   const act = MEDS.filter(m => m.status !== "Removed"), rem = MEDS.filter(m => m.status === "Removed").reverse();
   const A = $("medActive"), R = $("medRemoved");
   if (!act.length) A.innerHTML = '<div class="empty">No medicines in the list.</div>';
-  else A.innerHTML = `<div class="tbl"><table class="mtbl ${medManageMode && adm ? "manage" : "active"}"><thead><tr><th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th><th>When to Give<span class="gu">(ક્યારે આપવી)</span></th><th>Note<span class="gu">(નોંધ)</span></th><th>Company<span class="gu">(કંપની)</span></th>${medManageMode && adm ? "<th>Action</th>" : ""}</tr></thead><tbody>` +
-    act.map(m => `<tr><td class="mdn" data-label="Medicine (દવા)">${medCell(m)}</td>${medDetails(m)}${medActions(m, false)}</tr>`).join("") + `</tbody></table></div>`;
+  else A.innerHTML = `<div class="desk"><div class="tbl"><table class="mtbl ${medManageMode && adm ? "manage" : "active"}"><thead><tr><th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th><th>When to Give<span class="gu">(ક્યારે આપવી)</span></th><th>Note<span class="gu">(નોંધ)</span></th><th>Company<span class="gu">(કંપની)</span></th>${medManageMode && adm ? "<th>Action</th>" : ""}</tr></thead><tbody>` +
+    act.map(m => `<tr><td class="mdn" data-label="Medicine (દવા)">${medCell(m)}</td>${medDetails(m)}${medActions(m, false)}</tr>`).join("") + `</tbody></table></div></div>` + medMobTable(act, false, adm);
   if (adm){ $("medManageBtn").classList.toggle("hide", !act.length); $("medManageBtn").textContent = medManageMode ? "Done" : "Update"; }
   if (!rem.length) R.innerHTML = '<div class="empty">No removed medicines.</div>';
-  else R.innerHTML = `<div class="tbl"><table class="mtbl removed"><thead><tr><th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th><th>When to Give<span class="gu">(ક્યારે આપવી)</span></th><th>Note<span class="gu">(નોંધ)</span></th><th>Company<span class="gu">(કંપની)</span></th><th>Removed on</th>${adm ? "<th>Action</th>" : ""}</tr></thead><tbody>` +
-    rem.map(m => `<tr><td class="mdn" data-label="Medicine (દવા)">${medCell(m)}</td>${medDetails(m)}<td data-label="Removed on">${esc(dashIf(m.removed) || "-")}</td>${medActions(m, true)}</tr>`).join("") + `</tbody></table></div>`;
+  else R.innerHTML = `<div class="desk"><div class="tbl"><table class="mtbl removed"><thead><tr><th>Medicine<span class="gu">(દવા)</span></th><th>Dose<span class="gu">(ડોઝ)</span></th><th>When to Give<span class="gu">(ક્યારે આપવી)</span></th><th>Note<span class="gu">(નોંધ)</span></th><th>Company<span class="gu">(કંપની)</span></th><th>Removed on</th>${adm ? "<th>Action</th>" : ""}</tr></thead><tbody>` +
+    rem.map(m => `<tr><td class="mdn" data-label="Medicine (દવા)">${medCell(m)}</td>${medDetails(m)}<td data-label="Removed on">${esc(dashIf(m.removed) || "-")}</td>${medActions(m, true)}</tr>`).join("") + `</tbody></table></div></div>` + medMobTable(rem, true, adm);
 }
 async function loadMeds(){
   const adm = isAdmin(), A = $("medActive");
@@ -1847,7 +1913,7 @@ async function loadMeds(){
   try{
     const r = await call("medlist");
     if (!r.ok) return handleFail(r, A);
-    MEDS = r.meds || []; MCATS = (r.cats && r.cats.length) ? r.cats : DEF_CATS.slice();
+    MEDS = r.meds || []; normMeds(); MCATS = (r.cats && r.cats.length) ? r.cats : DEF_CATS.slice();
     renderMeds();
   }catch(e){ A.innerHTML = '<div class="empty">Could not load data. Check your internet.</div>'; }
 }
@@ -1861,7 +1927,8 @@ $("medSave").addEventListener("click", async () => {
   err.style.display = "none";
   const name = $("mname").value.trim();
   const cat = $("mcat").value === "__new" ? $("mcatnew").value.trim() : $("mcat").value;
-  const slots = [].filter.call(document.querySelectorAll("#mslots input"), c => c.checked).map(c => c.value);
+  const slots = [].filter.call(document.querySelectorAll("#mslots .slotbox"), b => b.querySelector("input").checked)
+    .map(b => { const t = getSlotTime(b); return b.dataset.slot + (t ? "@" + t : ""); });
   if (!name) return fail("Enter the medicine name.");
   if (!cat) return fail("Select or enter a category.");
   if (cat.indexOf(",") >= 0) return fail("Category name cannot contain a comma.");
